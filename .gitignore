@@ -1,0 +1,6 @@
+# this repo tracks the gradient studio and nothing else — everything in the
+# working folder is ignored by default so licensed fonts and brand assets
+# cannot be committed by accident
+*
+!.gitignore
+!gradient-studio-v4.html
