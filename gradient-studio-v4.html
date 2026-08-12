@@ -39,10 +39,12 @@ input{font:inherit;color:inherit;background:none;border:none;outline:none}
 
 /* ── rail ── */
 .rail{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
-.rail-head{padding:18px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;justify-content:space-between}
-.mark{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase}
-.mark span{color:var(--ink-3)}
-.ver{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--ink-3)}
+/* the header is the utility bar: theme at the leading edge, actions at the
+   trailing one. Left padding is short by the icon button's own inset so the
+   glyph optically lines up with the 18px of the group headers below. */
+.rail-head{height:52px;flex:none;padding:0 16px 0 12px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:8px}
+.headacts{display:flex;align-items:center;gap:8px}
 /* the gutter is reserved whether or not the bar is there, so opening a picker
    cannot resize the rail underneath the controls */
 .rail-body{overflow-y:auto;flex:1;min-height:0;scrollbar-gutter:stable;
@@ -81,7 +83,6 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
   transition:box-shadow .15s;
 }
 .tile:hover{box-shadow:inset 0 0 0 1px rgba(127,127,127,.55)}
-.tile.big{height:76px}
 .tile input.hex{
   font-family:var(--mono);font-size:13px;letter-spacing:.07em;text-transform:uppercase;
   width:70px;flex:none;cursor:text;padding:4px 3px;border-radius:5px;
@@ -197,12 +198,19 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
 
 /* ── stage ── */
 .stage{display:flex;flex-direction:column;min-width:0;min-height:0}
-.bar{height:52px;flex:none;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:flex-end;padding:0 16px;gap:8px}
-.canvaswrap{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:36px 44px 30px;background:var(--stage)}
+/* margin:auto centres the card while it fits and collapses to zero once it
+   doesn't — justify-content:center would strand the overflow out of reach */
+.canvaswrap{flex:1;min-height:0;display:flex;overflow:auto;padding:36px 44px 30px;background:var(--stage)}
+.canvasinner{margin:auto;display:flex;flex-direction:column;align-items:center;gap:16px}
+/* the hand only appears once there is somewhere to drag to */
+.canvaswrap.pannable{cursor:grab}
+.canvaswrap.grabbing{cursor:grabbing;user-select:none}
 .card{position:relative;container-type:inline-size;overflow:hidden;box-shadow:var(--card-shadow),0 0 0 1px var(--card-ring)}
 .card canvas{display:block;width:100%;height:100%}
 
-.sizebar{display:flex;align-items:center;gap:8px;height:22px}
+.sizebar{display:flex;align-items:center;gap:2px;height:22px}
+.sizedot{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);opacity:.5}
+#zoomLab{cursor:pointer}
 .sizelab{
   position:relative;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--ink-3);
   font-variant-numeric:tabular-nums;cursor:text;padding:3px 8px;border-radius:6px;user-select:none;
@@ -244,8 +252,11 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
 
   <aside class="rail">
     <div class="rail-head">
-      <div class="mark">Gradient <span>Studio</span></div>
-      <div class="ver">v4</div>
+      <button class="iconbtn" id="themeBtn" title="Light / dark" aria-label="Toggle theme"></button>
+      <div class="headacts">
+        <button class="btn mono" id="toggleContent" aria-pressed="false">Content</button>
+        <button class="btn mono" id="reset">Reset</button>
+      </div>
     </div>
 
     <div class="rail-body">
@@ -265,7 +276,9 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
       <section class="grp">
         <div class="grp-h">
           <span>Look</span>
-          <button class="iconbtn" id="shuffle" title="Shuffle arrangement — R" aria-label="Shuffle arrangement">
+          <button class="iconbtn" id="shuffle"
+            title="Shuffle — randomises the direction angle and the advanced arrangement settings only (scatter, highlight, distortion, seed). Your colours, depth, softness and grain are left alone. — R"
+            aria-label="Shuffle direction and advanced arrangement settings">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
               <path d="M2 4h2.6l5.8 8H14"/><path d="M2 12h2.6l5.8-8H14"/>
               <path d="M12 2.2 13.8 4 12 5.8"/><path d="M12 10.2 13.8 12 12 13.8"/>
@@ -314,13 +327,9 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
     </div>
   </aside>
 
-  <main class="stage">
-    <div class="bar">
-      <button class="iconbtn" id="themeBtn" title="Light / dark" aria-label="Toggle theme"></button>
-      <button class="btn mono" id="toggleContent" aria-pressed="false">Content</button>
-      <button class="btn mono" id="reset">Reset</button>
-    </div>
+  <main class="stage" id="stage">
     <div class="canvaswrap" id="wrap">
+     <div class="canvasinner">
       <div class="card" id="card">
         <canvas id="gl"></canvas>
         <div class="overlay off" id="overlay">
@@ -334,7 +343,12 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
           </div>
         </div>
       </div>
-      <div class="sizebar"><span class="sizelab" id="sizeLab" data-tip="Double-click to edit values"></span></div>
+      <div class="sizebar">
+        <span class="sizelab" id="sizeLab" data-tip="Double-click to edit values"></span>
+        <span class="sizedot">·</span>
+        <span class="sizelab" id="zoomLab" data-tip="Scroll to zoom — click to fit, double-click for 100%"></span>
+      </div>
+     </div>
     </div>
   </main>
 </div>
@@ -523,6 +537,9 @@ let U={};
   ['uLab','uPos','uSig','uGain'].forEach(n=>U[n]=gl.getUniformLocation(prog,n+'[0]'));
   ['uCount','uAspect','uPreserve','uWarp','uFall','uSeed','uGrain','uGrainPx'].forEach(n=>U[n]=gl.getUniformLocation(prog,n));
 })();
+/* what this device can actually draw into — 16384 on desktop, 4096 on plenty
+   of older and mobile GPUs */
+const MAXBUF=Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE),gl.getParameter(gl.MAX_VIEWPORT_DIMS)[0]);
 
 /* ══════════════════════════════════════════════════════════════
    STATE
@@ -532,7 +549,7 @@ const DEFAULTS={
   colors:['#3FBF5A'],
   depth:0.44, softness:0.32, grain:0.25,
   direction:148, seed:7412,
-  outW:1600, outH:1600, radius:22,
+  outW:1600, outH:1600, radius:22, zoom:1,
   vivid:0.85, tones:5, hueShift:-10,
   scatter:0.8, warp:0.10, bloom:0.55, grainSize:2
 };
@@ -686,7 +703,7 @@ function renderTiles(){
     const wrap=document.createElement('div');
     wrap.className='tilewrap'+(openIdx===i?' open':'');
     wrap.innerHTML=`
-      <div class="tile${single?' big solo':''}${!single&&S.colors.length<3?' solo':''}">
+      <div class="tile${single?' solo':''}${!single&&S.colors.length<3?' solo':''}">
         <input class="hex" value="${hex}" spellcheck="false" maxlength="7">
         <span class="spacer"></span>
         <span class="chev"><span></span><span></span></span>
@@ -878,8 +895,15 @@ aspectSeg.addEventListener('click',e=>{
 });
 
 /* size label — double-click to type an exact pixel size */
-const sizeBar=document.querySelector('.sizebar'), sizeLab=document.getElementById('sizeLab');
-function paintSize(){ sizeLab.textContent=`${S.outW} × ${S.outH}`; }
+const sizeBar=document.querySelector('.sizebar'), sizeLab=document.getElementById('sizeLab'),
+      zoomLab=document.getElementById('zoomLab');
+function paintSize(){
+  sizeLab.textContent=`${S.outW} × ${S.outH}`;
+  /* the true scale of the preview against the exported pixels, not a multiple
+     of the fit — 100% means one screen pixel per exported pixel */
+  const p=viewW/S.outW*100;
+  zoomLab.textContent=(p<10?p.toFixed(1):Math.round(p))+'%';
+}
 sizeLab.addEventListener('dblclick',()=>{
   const inp=document.createElement('input');
   inp.className='sizeinput'; inp.value=`${S.outW} × ${S.outH}`;
@@ -980,19 +1004,86 @@ function build(){
   card.style.borderRadius=S.radius+'px';
   render(cv.width,cv.height);
 }
-const wrap=document.getElementById('wrap');
-function resize(){
+const wrap=document.getElementById('wrap'), stage=document.getElementById('stage');
+const MAXCSS=2600;              /* ceiling on the backing store, not on the export */
+let viewW=0;                    /* what the card is actually showing, in CSS px */
+/* measured off the stage, never off the scrolling pane: a scrollbar appearing
+   at high zoom would otherwise shrink the fit and oscillate */
+function fitW(){
   const aspect=S.outW/S.outH;
-  const aw=wrap.clientWidth-88, ah=wrap.clientHeight-88;
-  let w=Math.min(aw,760,S.outW), h=w/aspect;
-  if(h>ah){ h=ah; w=h*aspect; }
-  w=Math.floor(w); h=Math.floor(h);
-  card.style.width=w+'px'; card.style.height=h+'px';
-  const dpr=Math.min(window.devicePixelRatio||1,2);
-  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
-  paintSize(); build();
+  const aw=stage.clientWidth-88, ah=stage.clientHeight-88;
+  let w=Math.min(aw,760,S.outW);
+  if(w/aspect>ah) w=ah*aspect;
+  return Math.max(w,40);
 }
-new ResizeObserver(resize).observe(wrap);
+function resize(){
+  const aspect=S.outW/S.outH, f=fitW();
+  const cap=Math.min(MAXCSS,MAXCSS*aspect);   /* caps the long side either way */
+  const w=clamp(f*S.zoom,40,cap);
+  S.zoom=w/f;                                 /* absorb the clamp so scrolling at
+                                                 the limit cannot bank up */
+  const h=w/aspect;
+  card.style.width=Math.round(w)+'px'; card.style.height=Math.round(h)+'px';
+  /* deep zoom on a modest GPU would ask for a buffer it cannot allocate, so the
+     pixel ratio gives way before the limit does — soft beats blank */
+  const dpr=Math.min(window.devicePixelRatio||1,2,MAXBUF/Math.max(w,h));
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  viewW=w;
+  paintSize(); build();
+  wrap.classList.toggle('pannable',
+    wrap.scrollWidth>wrap.clientWidth+1 || wrap.scrollHeight>wrap.clientHeight+1);
+}
+new ResizeObserver(resize).observe(stage);
+
+/* wheel anywhere over the stage zooms, anchored on the pointer: whatever is
+   under the cursor stays under it, so zooming never undoes a pan */
+wrap.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const r=wrap.getBoundingClientRect(), px=e.clientX-r.left, py=e.clientY-r.top;
+  const fx=(wrap.scrollLeft+px)/Math.max(wrap.scrollWidth,1);
+  const fy=(wrap.scrollTop +py)/Math.max(wrap.scrollHeight,1);
+  const d=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?100:1);
+  S.zoom=clamp(S.zoom*Math.exp(-d*0.0016),0.001,1000);
+  resize();
+  wrap.scrollLeft=fx*wrap.scrollWidth-px;   /* clamps itself back to 0 when it fits */
+  wrap.scrollTop =fy*wrap.scrollHeight-py;
+},{passive:false});
+
+/* drag to shift the view once the card outgrows the pane. Editable overlay text
+   and controls keep their own pointer behaviour. */
+let pan=null;
+wrap.addEventListener('pointerdown',e=>{
+  if(!wrap.classList.contains('pannable')) return;
+  if(e.target.closest('[contenteditable],button,input')) return;
+  pan={x:e.clientX,y:e.clientY,l:wrap.scrollLeft,t:wrap.scrollTop};
+  wrap.classList.add('grabbing');
+  try{ wrap.setPointerCapture(e.pointerId); }catch(x){}
+  e.preventDefault();
+});
+wrap.addEventListener('pointermove',e=>{
+  if(!pan) return;
+  wrap.scrollLeft=pan.l-(e.clientX-pan.x);
+  wrap.scrollTop =pan.t-(e.clientY-pan.y);
+});
+const endPan=e=>{
+  if(!pan) return;
+  pan=null; wrap.classList.remove('grabbing');
+  try{ wrap.releasePointerCapture(e.pointerId); }catch(x){}
+};
+wrap.addEventListener('pointerup',endPan);
+wrap.addEventListener('pointercancel',endPan);
+/* click fits, double-click goes to 1:1 with the exported pixels. The single
+   click is held back a beat so a double never flashes through fit on its way. */
+let zTap;
+zoomLab.addEventListener('click',()=>{
+  clearTimeout(zTap);
+  zTap=setTimeout(()=>{ S.zoom=1; resize(); },180);
+});
+zoomLab.addEventListener('dblclick',()=>{
+  clearTimeout(zTap);
+  S.zoom=S.outW/fitW();          /* resize() clamps this if the card won't fit */
+  resize();
+});
 
 /* ══════════════════════════════════════════════════════════════
    EXPORT
