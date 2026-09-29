@@ -1,0 +1,1756 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gradient Studio v6</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap" rel="stylesheet">
+<style>
+
+:root{
+  --bg:#060606; --panel:#0C0C0C; --panel-2:#111; --line:#1C1C1C; --line-2:#262626;
+  --ink:#EDEDED; --ink-2:#8A8A8A; --ink-3:#5A5A5A;
+  --hover:#151515; --seg-on:#232323; --sunk:#0E0E0E;
+  --track:#1E1E1E; --track-fill:#4A4A4A; --track-fill-hi:#666;
+  --stage:radial-gradient(60% 60% at 50% 40%,#0A0A0A,#060606);
+  --card-ring:rgba(255,255,255,.05); --card-shadow:0 40px 90px -30px rgba(0,0,0,.9);
+  --dial:radial-gradient(circle at 50% 34%,#191919,#0E0E0E 70%);
+  /* filled control rows — the whole row is the track */
+  --row:rgba(255,255,255,.045); --row-line:rgba(255,255,255,.06);
+  --row-fill:rgba(255,255,255,.085); --row-fill-hi:rgba(255,255,255,.125);
+  --row-tick:rgba(255,255,255,.55); --row-tick-hi:rgba(255,255,255,.78);
+  --dot:rgba(255,255,255,.075);
+  --pill:rgba(16,16,16,.82); --pill-line:rgba(255,255,255,.09);
+  --mono:"Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans:-apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", Arial, sans-serif;
+  --rail:340px;
+}
+:root[data-theme="light"]{
+  --bg:#F1F1F1; --panel:#FFF; --panel-2:#F7F7F7; --line:#E8E8E8; --line-2:#DCDCDC;
+  --ink:#0A0A0A; --ink-2:#5E5E5E; --ink-3:#9C9C9C;
+  --hover:#F2F2F2; --seg-on:#ECECEC; --sunk:#F7F7F7;
+  --track:#E4E4E4; --track-fill:#B4B4B4; --track-fill-hi:#8E8E8E;
+  --stage:radial-gradient(60% 60% at 50% 40%,#FBFBFB,#EDEDED);
+  --card-ring:rgba(0,0,0,.09); --card-shadow:0 30px 70px -28px rgba(0,0,0,.26);
+  --dial:radial-gradient(circle at 50% 34%,#FFF,#EFEFEF 70%);
+  --row:rgba(0,0,0,.045); --row-line:rgba(0,0,0,.055);
+  --row-fill:rgba(0,0,0,.07); --row-fill-hi:rgba(0,0,0,.10);
+  --row-tick:rgba(0,0,0,.5); --row-tick-hi:rgba(0,0,0,.72);
+  --dot:rgba(0,0,0,.11);
+  --pill:rgba(255,255,255,.9); --pill-line:rgba(0,0,0,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input{font:inherit;color:inherit;background:none;border:none;outline:none}
+.off{display:none !important}
+
+.app{display:grid;grid-template-columns:var(--rail) 1fr;height:100vh}
+
+/* ── rail ── */
+.rail{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+/* the header is the utility bar: theme at the leading edge, actions at the
+   trailing one. Left padding is short by the icon button's own inset so the
+   glyph optically lines up with the 18px of the group headers below. */
+.rail-head{height:52px;flex:none;padding:0 16px 0 12px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:8px}
+.headacts{display:flex;align-items:center;gap:8px}
+/* the gutter is reserved whether or not the bar is there, so opening a picker
+   cannot resize the rail underneath the controls */
+.rail-body{overflow-y:auto;flex:1;min-height:0;scrollbar-gutter:stable;
+  scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+.rail-body::-webkit-scrollbar{width:8px}
+.rail-body::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px;border:2px solid var(--panel)}
+
+section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
+.grp-h{
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);
+  margin-bottom:13px;display:flex;align-items:center;justify-content:space-between;min-height:20px;
+}
+.hint{font-size:11.5px;line-height:1.45;color:var(--ink-3);margin-top:9px}
+
+.iconbtn{
+  width:26px;height:26px;border-radius:7px;display:grid;place-items:center;color:var(--ink-3);
+  transition:.15s;margin:-4px -5px -4px 0;
+}
+.iconbtn:hover{color:var(--ink);background:var(--hover)}
+.iconbtn svg{width:15px;height:15px}
+
+/* ── segmented ── */
+.seg{display:flex;background:var(--sunk);border:1px solid var(--line);border-radius:9px;padding:2px;gap:2px}
+.seg button{flex:1;height:28px;border-radius:7px;font-size:12px;color:var(--ink-3);transition:.14s;letter-spacing:-.01em}
+.seg button:hover{color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--seg-on);color:var(--ink)}
+.seg.mono button{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;height:26px}
+
+/* ── colour tile + inline picker ── */
+.tiles{display:flex;flex-direction:column;gap:7px}
+.tilewrap{display:flex;flex-direction:column}
+.tile{
+  position:relative;height:52px;border-radius:11px;display:flex;align-items:center;
+  padding:0 8px 0 14px;gap:6px;cursor:pointer;
+  box-shadow:inset 0 0 0 1px rgba(127,127,127,.28);
+  transition:box-shadow .15s;
+}
+.tile:hover{box-shadow:inset 0 0 0 1px rgba(127,127,127,.55)}
+.tile input.hex{
+  font-family:var(--mono);font-size:13px;letter-spacing:.07em;text-transform:uppercase;
+  width:70px;flex:none;cursor:text;padding:4px 3px;border-radius:5px;
+}
+.tile input.hex:focus{background:rgba(127,127,127,.22)}
+.tile .spacer{flex:1;min-width:0;align-self:stretch}
+/* shared toggle: two bars that read as a chevron closed, a dash open */
+.chev{position:relative;width:20px;height:20px;flex:none;opacity:.55;transition:opacity .15s;pointer-events:none}
+.chev span{
+  display:block;position:absolute;top:9px;left:5px;width:10px;height:2px;
+  background:currentColor;border-radius:2px;
+  transition:transform .35s cubic-bezier(0.16,1,0.3,1), opacity .25s ease;
+}
+.chev span:nth-child(1){transform:translateX(-3px) rotate(45deg)}
+.chev span:nth-child(2){transform:translateX(3px) rotate(-45deg)}
+/* on a saturated chip the marker only needs to be found, not read — it sits
+   further in from the edge and carries less contrast than the one in the rail */
+.tile .chev{opacity:.38;margin-right:6px}
+.tile:hover .chev{opacity:.62}
+.advhead:hover .chev{opacity:.9}
+.tilewrap.open .chev span:nth-child(1),
+.advhead[aria-expanded="true"] .chev span:nth-child(1){transform:translateX(-3px) rotate(0deg)}
+.tilewrap.open .chev span:nth-child(2),
+.advhead[aria-expanded="true"] .chev span:nth-child(2){transform:translateX(3px) rotate(0deg)}
+.tile .kill{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:15px;line-height:1;opacity:0;transition:.14s;background:rgba(0,0,0,.14)}
+.tile:hover .kill{opacity:.55}
+.tile .kill:hover{opacity:1;background:rgba(0,0,0,.3)}
+.tile.solo .kill{display:none}
+
+/* the panel slides down out from under the tile as the row opens */
+.pickwrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s cubic-bezier(.33,1,.68,1),margin-top .28s cubic-bezier(.33,1,.68,1)}
+.tilewrap.open .pickwrap{grid-template-rows:1fr;margin-top:3px}
+.pick{overflow:hidden;min-height:0}
+.pickinner{
+  border:1px solid var(--line);border-radius:11px;background:var(--sunk);padding:10px;
+  display:flex;flex-direction:column;gap:10px;
+  transform:translateY(-24px);opacity:0;
+  transition:transform .28s cubic-bezier(.33,1,.68,1),opacity .2s ease;
+}
+.tilewrap.open .pickinner{transform:translateY(0);opacity:1}
+.pad{position:relative;width:100%;height:112px;border-radius:8px;cursor:crosshair;touch-action:none;
+  box-shadow:inset 0 0 0 1px rgba(127,127,127,.2)}
+.pad .dot,.hue .dot{
+  position:absolute;width:13px;height:13px;border-radius:50%;pointer-events:none;
+  border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.45),0 1px 3px rgba(0,0,0,.4);
+  transform:translate(-50%,-50%);
+}
+.hue{position:relative;height:14px;border-radius:999px;cursor:ew-resize;touch-action:none;
+  box-shadow:inset 0 0 0 1px rgba(127,127,127,.25);
+  background:linear-gradient(to right,#F00,#FF0,#0F0,#0FF,#00F,#F0F,#F00)}
+.hue .dot{top:50%}
+.pickfoot{display:flex;gap:6px;align-items:center}
+.fld{
+  flex:1;min-width:0;display:flex;align-items:center;gap:4px;height:30px;padding:0 7px;
+  border:1px solid var(--line-2);border-radius:8px;background:var(--panel);
+  transition:border-color .15s,background .15s;cursor:text;
+}
+.fld:hover{border-color:var(--ink-3)}
+.fld:focus-within{border-color:var(--ink-2);background:var(--panel)}
+.fld b{font-family:var(--mono);font-size:9.5px;font-weight:400;color:var(--ink-3);flex:none}
+.fld input{font-family:var(--mono);font-size:11px;width:100%;min-width:0;text-align:right;font-variant-numeric:tabular-nums}
+.fld i{font-style:normal;font-family:var(--mono);font-size:9.5px;color:var(--ink-3);flex:none}
+.pickfoot .eyedrop{width:30px;height:30px;flex:none;border-radius:8px;border:1px solid var(--line-2);
+  display:grid;place-items:center;color:var(--ink-2);transition:.15s}
+.pickfoot .eyedrop:hover{color:var(--ink);background:var(--hover);border-color:var(--ink-3)}
+.pickfoot .eyedrop svg{width:15px;height:15px}
+
+.addbtn{height:38px;border-radius:10px;border:1px dashed var(--line-2);color:var(--ink-3);font-size:12px;transition:.15s;margin-top:7px;width:100%}
+.addbtn:hover{color:var(--ink);border-color:var(--ink-3);background:var(--hover)}
+.ramp{display:flex;height:20px;border-radius:7px;overflow:hidden;margin-top:9px;border:1px solid var(--line)}
+.ramp div{flex:1}
+
+/* label + value + track collapsed into one row: the whole row is the handle,
+   so the value is scrubbed wherever the pointer happens to land */
+.ctl{position:relative;display:flex;align-items:center;height:34px;margin-top:7px;
+  border-radius:9px;overflow:hidden;background:var(--row);
+  box-shadow:inset 0 0 0 .5px var(--row-line);
+  cursor:grab;user-select:none;touch-action:none;transition:background .15s}
+.ctl:active{cursor:grabbing}
+.ctl:focus-visible{outline:none;box-shadow:inset 0 0 0 1px var(--ink-3)}
+.ctl .fill{position:absolute;left:0;top:0;height:100%;border-radius:9px;
+  background:var(--row-fill);transition:background .15s}
+.ctl:hover .fill{background:var(--row-fill-hi)}
+/* the tick rides the leading edge of the fill but never leaves the row, so a
+   value sitting at either limit still reads as a position rather than absence */
+.ctl .tick{position:absolute;top:50%;width:2px;height:12px;border-radius:2px;
+  background:var(--row-tick);transform:translate(-50%,-50%);transition:background .15s}
+.ctl:hover .tick{background:var(--row-tick-hi)}
+.ctl .lab{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;
+  gap:10px;padding:0 12px;pointer-events:none}
+.ctl-lab{font-size:12px;color:var(--ink-2);letter-spacing:-.01em;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s}
+.ctl:hover .ctl-lab{color:var(--ink)}
+.ctl-lab em{font-style:normal;font-size:10.5px;color:var(--ink-3);margin-left:6px}
+.ctl-val{font-family:var(--mono);font-size:10.5px;color:var(--ink-2);
+  font-variant-numeric:tabular-nums;flex:none;transition:color .15s}
+.ctl:hover .ctl-val{color:var(--ink)}
+
+/* the direction dial keeps a label row above it — same type, no track */
+.ctl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:10px}
+.dialmeta .ctl-lab{font-size:12.5px}
+
+/* ── dial ── */
+.dialrow{display:flex;gap:15px;align-items:center}
+.dial{width:62px;height:62px;flex:none;border-radius:50%;position:relative;cursor:grab;touch-action:none;
+  background:var(--dial);box-shadow:inset 0 0 0 1px var(--line-2)}
+.dial:active{cursor:grabbing}
+.dial .ind{position:absolute;left:50%;top:50%;width:2px;height:22px;background:var(--ink);border-radius:2px;transform-origin:50% 100%;margin-left:-1px;margin-top:-22px}
+.dial::after{content:"";position:absolute;inset:8px;border-radius:50%;border:1px dashed var(--line-2)}
+.dialmeta{flex:1;min-width:0}
+
+.btn{font-size:12px;height:34px;padding:0 13px;border-radius:9px;border:1px solid var(--line-2);
+  color:var(--ink-2);display:inline-flex;align-items:center;justify-content:center;gap:7px;transition:.15s}
+.btn:hover{color:var(--ink);border-color:var(--ink-3);background:var(--hover)}
+.btn.mono{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;height:30px;padding:0 11px}
+.btn.full{width:100%}
+.btn.primary{background:var(--seg-on);color:var(--ink);border-color:transparent}
+.btn.primary:hover{background:var(--line-2)}
+
+.advhead{display:flex;align-items:center;justify-content:space-between;width:100%;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.advhead:hover{color:var(--ink-2)}
+.advhead .chev{margin:-6px -3px -6px 0}
+
+.seedrow{display:flex;gap:6px;margin-top:16px;align-items:center}
+.seedbox{flex:1;height:30px;border:1px solid var(--line);background:var(--sunk);border-radius:8px;display:flex;align-items:center;padding:0 10px;gap:8px}
+.seedbox label{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--ink-3)}
+.seedbox input{font-family:var(--mono);font-size:11px;width:100%;min-width:0;font-variant-numeric:tabular-nums}
+.exportgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+
+/* ── stage ── */
+.stage{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0}
+/* margin:auto centres the card while it fits and collapses to zero once it
+   doesn't — justify-content:center would strand the overflow out of reach */
+/* dot grid over the stage wash: it gives the card something to sit on, so a
+   pale gradient no longer floats in an empty field */
+.canvaswrap{flex:1;min-height:0;display:flex;overflow:auto;padding:36px 44px 44px;
+  background-image:radial-gradient(circle at 1px 1px,var(--dot) 1.4px,transparent 0),var(--stage);
+  background-size:24px 24px,auto}
+.canvasinner{margin:auto;display:flex;flex-direction:column;align-items:center;gap:16px}
+/* the hand only appears once there is somewhere to drag to */
+.canvaswrap.pannable{cursor:grab}
+.canvaswrap.grabbing{cursor:grabbing;user-select:none}
+.card{position:relative;container-type:inline-size;overflow:hidden;box-shadow:var(--card-shadow),0 0 0 1px var(--card-ring)}
+.card canvas{display:block;width:100%;height:100%}
+
+.sizebar{display:flex;align-items:center;gap:2px;height:22px}
+.sizedot{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);opacity:.5}
+#zoomLab{cursor:pointer}
+.sizelab{
+  position:relative;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;cursor:text;padding:3px 8px;border-radius:6px;user-select:none;
+  transition:color .15s,background .15s;
+}
+.sizelab:hover{color:var(--ink-2);background:var(--hover)}
+.sizelab::after{
+  content:attr(data-tip);position:absolute;left:50%;top:calc(100% + 7px);
+  transform:translateX(-50%) translateY(-4px);
+  background:var(--panel);border:1px solid var(--line-2);color:var(--ink-2);
+  font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;
+  padding:5px 9px;border-radius:7px;box-shadow:0 6px 18px rgba(0,0,0,.25);
+  opacity:0;pointer-events:none;transition:.16s;
+}
+.sizelab:hover::after{opacity:1;transform:translateX(-50%) translateY(0)}
+.sizeinput{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--ink);text-align:center;
+  background:var(--panel);border:1px solid var(--line-2);border-radius:6px;padding:3px 8px;width:150px;
+}
+/* tooltips on the pill open upward — below is off the bottom of the stage */
+.sizelab.up::after{top:auto;bottom:calc(100% + 7px);transform:translateX(-50%) translateY(4px)}
+.sizelab.up:hover::after{transform:translateX(-50%) translateY(0)}
+
+/* ── zoom pill ── */
+.zoombar{
+  position:absolute;right:16px;bottom:16px;z-index:10;
+  display:flex;align-items:center;gap:3px;height:38px;padding:0 5px;
+  border-radius:12px;border:1px solid var(--pill-line);background:var(--pill);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 4px 16px -4px rgba(0,0,0,.28);
+}
+.zoombar button{
+  width:28px;height:28px;border-radius:8px;display:grid;place-items:center;
+  color:var(--ink-3);transition:.14s;
+}
+.zoombar button:hover{color:var(--ink);background:var(--hover)}
+.zoombar button svg{width:14px;height:14px}
+.zrange{
+  -webkit-appearance:none;appearance:none;width:62px;height:4px;margin:0 3px;
+  border-radius:999px;background:var(--track);cursor:pointer;
+}
+.zrange::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+  width:9px;height:9px;border-radius:50%;background:var(--track-fill-hi);border:none;cursor:grab}
+.zrange:hover::-webkit-slider-thumb{background:var(--ink-2)}
+.zrange::-moz-range-thumb{width:9px;height:9px;border-radius:50%;
+  background:var(--track-fill-hi);border:none;cursor:grab}
+.zrange:hover::-moz-range-thumb{background:var(--ink-2)}
+.zoombar .sizelab{min-width:46px;text-align:center}
+
+.overlay{position:absolute;inset:0;padding:7.4%;display:flex;flex-direction:column;color:#000}
+.ov-eyebrow{font-size:clamp(9px,1.5cqw,15px);letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.ov-head{font-size:clamp(18px,4.3cqw,44px);line-height:1.09;letter-spacing:-.02em;font-weight:600;margin-top:.7em;max-width:88%}
+.ov-btn{margin-top:1.1em;align-self:flex-start;background:#000;color:#fff;border-radius:999px;padding:.62em 1.15em;font-size:clamp(11px,2.1cqw,21px);font-weight:600}
+.ov-glyph{margin-top:auto;width:16%;aspect-ratio:1}
+.ov-glyph svg{width:100%;height:100%;display:block}
+[contenteditable]{outline:none}
+[contenteditable]:focus{box-shadow:0 0 0 2px rgba(0,0,0,.25);border-radius:3px}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(14px);
+  background:var(--panel);border:1px solid var(--line-2);color:var(--ink);font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.06em;text-transform:uppercase;padding:9px 15px;border-radius:9px;opacity:0;
+  pointer-events:none;transition:.22s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+/* a toast that carries an action (Undo) takes the pointer while it is up */
+.toast.act.on{pointer-events:auto;cursor:pointer}
+.toast u{text-underline-offset:2px}
+.presets{margin-top:10px}
+.presets button{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn[disabled]{opacity:.6;cursor:default;pointer-events:none}
+#playBtn svg{width:13px;height:13px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="rail">
+    <div class="rail-head">
+      <button class="iconbtn" id="themeBtn" title="Light / dark" aria-label="Toggle theme"></button>
+      <div class="headacts">
+        <button class="btn mono" id="toggleContent" aria-pressed="false">Content</button>
+        <button class="btn mono" id="reset">Reset</button>
+      </div>
+    </div>
+
+    <div class="rail-body">
+
+      <section class="grp">
+        <div class="grp-h"><span>Style</span></div>
+        <div class="seg" id="styleSeg">
+          <button data-v="soft" aria-pressed="true">Soft</button>
+          <button data-v="flow" aria-pressed="false">Flow</button>
+        </div>
+        <div class="seg mono presets off" id="presetRow"></div>
+        <div class="hint" id="styleHint"></div>
+      </section>
+
+      <section class="grp">
+        <div class="grp-h"><span>Colour</span></div>
+        <div class="seg" id="modeSeg">
+          <button data-v="single"   aria-pressed="true">One</button>
+          <button data-v="multi"    aria-pressed="false">Two or more</button>
+        </div>
+        <div class="tiles" style="margin-top:12px" id="tileHost"></div>
+        <button class="addbtn off" id="addColor">+ Add colour</button>
+        <div class="ramp off" id="ramp"></div>
+        <div class="hint" id="modeHint"></div>
+      </section>
+
+      <section class="grp">
+        <div class="grp-h">
+          <span>Look</span>
+          <button class="iconbtn" id="shuffle"
+            title="Shuffle — randomises the direction angle and the advanced arrangement settings only (scatter, highlight, distortion, seed). Your colours, depth, softness and grain are left alone. — R"
+            aria-label="Shuffle direction and advanced arrangement settings">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 4h2.6l5.8 8H14"/><path d="M2 12h2.6l5.8-8H14"/>
+              <path d="M12 2.2 13.8 4 12 5.8"/><path d="M12 10.2 13.8 12 12 13.8"/>
+            </svg>
+          </button>
+        </div>
+        <div class="dialrow">
+          <div class="dial" id="dial" tabindex="0" role="slider" aria-label="Direction" aria-valuemin="0" aria-valuemax="359"><div class="ind"></div></div>
+          <div class="dialmeta">
+            <div class="ctl-top" style="margin-bottom:0">
+              <span class="ctl-lab">Direction <em>aims the light</em></span>
+              <span class="ctl-val" id="angleVal"></span>
+            </div>
+          </div>
+        </div>
+        <div id="ctlFlow"></div>
+        <div id="ctlLook"></div>
+        <div class="seg mono" id="grainSeg" style="margin-top:9px">
+          <button data-v="0" aria-pressed="true">Fine</button>
+          <button data-v="1" aria-pressed="false">Colour</button>
+          <button data-v="2" aria-pressed="false">Film</button>
+          <button data-v="3" aria-pressed="false">Speckle</button>
+        </div>
+        <div id="ctlGrain"></div>
+        <div id="ctlHatch"></div>
+      </section>
+
+      <section class="grp off" id="motionGrp">
+        <div class="grp-h">
+          <span>Motion</span>
+          <button class="iconbtn" id="playBtn" title="Pause — Space" aria-label="Pause"></button>
+        </div>
+        <div id="ctlMotion"></div>
+      </section>
+
+      <section class="grp">
+        <div class="grp-h"><span>Format</span></div>
+        <div class="seg mono" id="aspectSeg"></div>
+        <div id="ctlFmt"></div>
+      </section>
+
+      <section class="grp">
+        <button class="advhead" id="advToggle" aria-expanded="false"><span>Advanced</span>
+          <span class="chev"><span></span><span></span></span>
+        </button>
+        <div id="adv" class="off" style="margin-top:4px">
+          <div id="ctlAdvMix"></div>
+          <div id="ctlAdvSingle"></div>
+          <div id="ctlAdvComp"></div>
+          <div id="ctlAdvHatch"></div>
+          <div class="seedrow"><div class="seedbox"><label>SEED</label><input id="seed" type="text" inputmode="numeric"></div></div>
+        </div>
+      </section>
+
+      <section class="grp" style="border-bottom:none">
+        <div class="grp-h"><span>Export</span></div>
+        <button class="btn full primary" id="dlPng">Download PNG</button>
+        <div class="exportgrid">
+          <button class="btn mono" id="copyCss">Copy CSS</button>
+          <button class="btn mono off" id="copyCode">Copy code</button>
+          <button class="btn mono" id="copyHex">Copy colours</button>
+        </div>
+        <div class="off" id="videoRow">
+          <div class="seg mono" id="lenSeg" style="margin-top:12px">
+            <button data-v="5"  aria-pressed="false">5s</button>
+            <button data-v="10" aria-pressed="true">10s</button>
+            <button data-v="20" aria-pressed="false">20s</button>
+          </div>
+          <button class="btn full" id="dlVideo" style="margin-top:6px">Download video</button>
+          <div class="hint">Copy code gives a live, moving version for any website. Video saves the motion as MP4, or WebM where MP4 isn't available.</div>
+        </div>
+      </section>
+
+    </div>
+  </aside>
+
+  <main class="stage" id="stage">
+    <div class="canvaswrap" id="wrap">
+     <div class="canvasinner">
+      <div class="card" id="card">
+        <canvas id="gl"></canvas>
+        <div class="overlay off" id="overlay">
+          <div class="ov-eyebrow" contenteditable>No hidden fees</div>
+          <div class="ov-head" contenteditable>Skip the monthly fees, hidden fees, and minimum balance requirements.</div>
+          <button class="ov-btn" contenteditable>Save on fees</button>
+          <div class="ov-glyph">
+            <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="9">
+              <ellipse cx="50" cy="50" rx="27" ry="36"/><line x1="16" y1="92" x2="84" y2="8"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="sizebar">
+        <span class="sizelab" id="sizeLab" data-tip="Double-click to edit values"></span>
+      </div>
+     </div>
+    </div>
+
+    <!-- the readout leads so its hover tip stays clear of the viewport edge:
+         centred on the trailing item it would be clipped by the window -->
+    <div class="zoombar">
+      <span class="sizelab up" id="zoomLab" data-tip="Click to fit — double-click for 100%"></span>
+      <button id="zOut" aria-label="Zoom out" title="Zoom out">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3.5 8h9"/></svg>
+      </button>
+      <input class="zrange" id="zRange" type="range" min="0" max="1" step="0.001" aria-label="Zoom level">
+      <button id="zIn" aria-label="Zoom in" title="Zoom in">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3.5 8h9M8 3.5v9"/></svg>
+      </button>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   COLOUR CORE — sRGB ⇄ linear ⇄ Oklab ⇄ OKLCH, gamut-safe
+   ══════════════════════════════════════════════════════════════ */
+const clamp=(v,a=0,b=1)=>v<a?a:v>b?b:v, D=Math.PI/180;
+function hex2rgb(h){
+  h=(h||'').trim().replace(/^#/,'');
+  if(h.length===3) h=h.split('').map(c=>c+c).join('');
+  if(!/^[0-9a-fA-F]{6}$/.test(h)) return null;
+  const n=parseInt(h,16); return [(n>>16&255)/255,(n>>8&255)/255,(n&255)/255];
+}
+const rgb2hex=c=>'#'+c.map(v=>Math.round(clamp(v)*255).toString(16).padStart(2,'0')).join('').toUpperCase();
+const s2l=c=>c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);
+const l2s=c=>c<=0.0031308?c*12.92:1.055*Math.pow(c,1/2.4)-0.055;
+function lin2oklab(r,g,b){
+  const l=Math.cbrt(0.4122214708*r+0.5363325363*g+0.0514459929*b);
+  const m=Math.cbrt(0.2119034982*r+0.6806995451*g+0.1073969566*b);
+  const s=Math.cbrt(0.0883024619*r+0.2817188376*g+0.6299787005*b);
+  return [0.2104542553*l+0.7936177850*m-0.0040720468*s,
+          1.9779984951*l-2.4285922050*m+0.4505937099*s,
+          0.0259040371*l+0.7827717662*m-0.8086757660*s];
+}
+function oklab2lin(L,a,b){
+  let l=L+0.3963377774*a+0.2158037573*b, m=L-0.1055613458*a-0.0638541728*b, s=L-0.0894841775*a-1.2914855480*b;
+  l=l*l*l; m=m*m*m; s=s*s*s;
+  return [ 4.0767416621*l-3.3077115913*m+0.2309699292*s,
+          -1.2684380046*l+2.6097574011*m-0.3413193965*s,
+          -0.0041960863*l-0.7034186147*m+1.7076147010*s];
+}
+const inG=(c,e=1e-4)=>c[0]>=-e&&c[0]<=1+e&&c[1]>=-e&&c[1]<=1+e&&c[2]>=-e&&c[2]<=1+e;
+function hex2lch(hex){
+  const rgb=hex2rgb(hex); if(!rgb) return null;
+  const [L,a,b]=lin2oklab(...rgb.map(s2l));
+  return {L,C:Math.hypot(a,b),H:(Math.atan2(b,a)/D+360)%360};
+}
+const lchLin=(L,C,H)=>oklab2lin(L,C*Math.cos(H*D),C*Math.sin(H*D));
+function maxC(L,H){
+  let lo=0,hi=0.42; if(inG(lchLin(L,hi,H))) return hi;
+  for(let i=0;i<22;i++){const m=(lo+hi)/2; inG(lchLin(L,m,H))?lo=m:hi=m;}
+  return lo;
+}
+function lch2hex(L,C,H){
+  L=clamp(L,0,1); let lin=lchLin(L,C,H);
+  if(!inG(lin)){ C=Math.min(C,maxC(L,H)); lin=lchLin(L,C,H); }
+  return {hex:rgb2hex(lin.map(l2s)),L,C,H:(H%360+360)%360};
+}
+
+/* ══════════════════════════════════════════════════════════════
+   COLOUR GENERATION
+   ══════════════════════════════════════════════════════════════ */
+function buildFamily(base,{tones,range,hueShift}){
+  const out=[], hi=clamp(base.L+range*0.60,0.06,0.975), lo=clamp(base.L-range*0.40,0.06,0.975);
+  for(let i=0;i<tones;i++){
+    const t=tones===1?0.5:i/(tones-1);
+    const L=hi+(lo-hi)*t, H=base.H+hueShift*(0.5-t)*2;
+    /* riding a fraction of the gamut ceiling is what gives a chalky highlight
+       and a dense shadow instead of a flat tint ramp */
+    out.push(lch2hex(L,Math.min(base.C,maxC(L,H)*0.94),H));
+  }
+  return out;
+}
+function buildPalette(cols,{depth}){
+  const n=cols.length;
+  return cols.map((c,i)=>{
+    const t=n===1?0.5:i/(n-1);
+    const L=clamp(c.L+(0.5-t)*2*depth*0.20,0.06,0.975);
+    return lch2hex(L,Math.min(c.C,maxC(L,c.H)*0.98),c.H);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LAYOUT
+   ══════════════════════════════════════════════════════════════ */
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function layout(stops,o){
+  const rnd=mulberry32((o.seed|0)+1), n=stops.length;
+  const a=(o.direction-90)*D, ca=Math.cos(a), sa=Math.sin(a);
+  const place=(u,v)=>({x:0.5+(u*ca-v*sa)*0.70, y:0.5+(u*sa+v*ca)*0.70});
+  const pts=[];
+  for(let i=0;i<n;i++){
+    const t=n===1?0.5:i/(n-1);
+    /* along the flow axis — the dial points at the light end; ends run past
+       the frame so they own the corners */
+    const u=(0.5-t)*1.62+(rnd()-0.5)*0.22*o.scatter;
+    /* zig-zag across it — this is what turns a linear ramp into a mesh */
+    const v=(i%2?1:-1)*(0.14+0.50*rnd())*o.scatter;
+    pts.push({...place(u,v), sig:o.spread*(0.60+0.40*rnd())*(1.05/Math.sqrt(n)+0.30), gain:1, lch:stops[i]});
+  }
+  if(o.bloom>0.001){                    /* soft hot-spot of the lightest tone */
+    /* this used to take the colour of whichever stop was lightest — a discrete
+       argmax. Depth drives the stops' lightness in opposite directions, so two
+       colours of similar lightness swap places partway along the slider and the
+       highlight snapped from one hue to the other in a single step. Weighting
+       the stops by lightness hands over gradually instead. The falloff is set
+       so only stops within roughly 0.05 of the leader get a real say. */
+    /* finite support, not an exponential: a stop more than BLOOM_TIE below the
+       leader contributes exactly nothing, so every palette with a clear
+       lightest tone renders bit-identically to before. Only a genuine near-tie
+       — the situation that used to snap — mixes at all. */
+    const BLOOM_TIE=0.08;
+    let hi=stops[0].L; stops.forEach(s=>{ if(s.L>hi) hi=s.L; });
+    let wsum=0,L=0,C=0,dx=0,dy=0;
+    stops.forEach(s=>{
+      const u=Math.min((hi-s.L)/BLOOM_TIE,1), w=(1-u)*(1-u);
+      if(w<=0) return;
+      wsum+=w; L+=w*s.L; C+=w*s.C; dx+=w*Math.cos(s.H*D); dy+=w*Math.sin(s.H*D);
+    });
+    L/=wsum; C/=wsum; dx/=wsum; dy/=wsum;
+    /* mean chroma magnitude with the mean hue DIRECTION, rather than a straight
+       Oklab average: blending two hues component-wise would sink the highlight
+       toward grey exactly at the handover, which is the moment it is most seen */
+    const dl=Math.hypot(dx,dy);
+    const H=dl>1e-6?(Math.atan2(dy,dx)/D+360)%360:stops[0].H;
+    pts.push({...place(0.10+0.34*rnd(),(rnd()*2-1)*0.42), sig:o.spread*(0.34+0.14*rnd()), gain:o.bloom*1.7, lch:{L,C,H}});
+  }
+  return pts;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   WEBGL
+   ══════════════════════════════════════════════════════════════ */
+const MAXP=12;
+/* hatch: fine parallel hairlines in EXPORTED pixels, like the grain. When the
+   preview is minified one fragment spans several export pixels, so the line
+   edge widens with the footprint instead of aliasing into moire. */
+const HATCH_GLSL=`
+float hatchLine(){
+  float a=radians(uHatchAngle);
+  vec2 hp=gl_FragCoord.xy*uOutScale;
+  float x=cos(a)*hp.x+sin(a)*hp.y;
+  float d=abs(fract(x/uHatchGap)-0.5)*uHatchGap;
+  float w=max(uOutScale,1.0);
+  return 1.0-smoothstep(0.55-0.35*w,0.55+0.35*w,d);
+}`;
+const VS=`attribute vec2 p;varying vec2 vUv;void main(){vUv=p*0.5+0.5;gl_Position=vec4(p,0.,1.);}`;
+const FS=`
+precision highp float;
+varying vec2 vUv;
+uniform vec3  uLab[${MAXP}];
+uniform vec2  uPos[${MAXP}];
+uniform float uSig[${MAXP}];
+uniform float uGain[${MAXP}];
+uniform int   uCount;
+uniform float uAspect,uPreserve,uWarp,uFall,uSeed,uGrain;
+uniform float uGrainSize,uGrainType,uOutScale,uSuper;
+uniform float uHatch,uHatchGap,uHatchAngle;
+${HATCH_GLSL}
+
+float hash21(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
+/* the old hash multiplied x by y, which lays faint diagonals through the field
+   once the grain is fine enough to see. This one (Hoskins) has no such axis. */
+float hash13(vec3 p3){
+  p3=fract(p3*0.1031);
+  p3+=dot(p3,p3.zyx+31.32);
+  return fract((p3.x+p3.y)*p3.z);
+}
+/* three uniforms summed make a bell curve. Uniform noise fires every value
+   equally often and reads as television static; a bell spends most of its time
+   near zero and only occasionally throws a strong speck — which is what film
+   grain and Photoshop's gaussian noise actually look like. */
+float gcell(vec2 p,float ch){
+  float s=ch+uSeed*7.31;
+  return (hash13(vec3(p,s))+hash13(vec3(p,s+19.7))+hash13(vec3(p,s+53.3))-1.5)*0.5774;
+}
+/* above one pixel the grain must grow as soft clumps, never as hard squares —
+   floor() alone is what produced the fat blocks */
+float gsmooth(vec2 p,float ch){
+  vec2 i=floor(p),f=fract(p),u=f*f*(3.0-2.0*f);
+  return mix(mix(gcell(i,ch),          gcell(i+vec2(1,0),ch),u.x),
+             mix(gcell(i+vec2(0,1),ch),gcell(i+vec2(1,1),ch),u.x),u.y)*1.72;
+}
+/* at or below one export pixel the cells are crisp; above it they blend into
+   clumps. The crossfade matters because the size slider is scrubbed by hand —
+   a hard switch at 1px pops as the pointer crosses it */
+float gsample(vec2 opx,float ch){
+  float sz=max(uGrainSize,0.001);
+  /* below one pixel the grain is finer than the image can hold. Point-sampling
+     it would keep full strength and simply relabel the same static, so the
+     whole sub-pixel half of the slider would do nothing to the exported PNG.
+     Averaging it over the pixel is what a real downsample does, and averaging
+     1/sz² independent cells scales the amplitude by sz — so the range reads as
+     "finer therefore quieter" and the preview keeps telling the truth. */
+  if(sz<1.0) return gcell(floor(opx),ch)*sz;
+  vec2 p=opx/sz;
+  return mix(gcell(floor(p),ch),gsmooth(p,ch),smoothstep(1.0,1.6,sz));
+}
+/* when the preview is minified one fragment covers several export pixels, so
+   the footprint is averaged rather than point-sampled: the same reason a
+   downscaled photo looks smooth instead of crawling */
+float grainAt(vec2 opx,float ch){
+  if(uSuper>0.5){
+    float o=uOutScale*0.25;
+    return (gsample(opx+vec2(-o,-o),ch)+gsample(opx+vec2(o,-o),ch)
+           +gsample(opx+vec2(-o, o),ch)+gsample(opx+vec2(o, o),ch))*0.25;
+  }
+  return gsample(opx,ch);
+}
+float vnoise(vec2 p){
+  vec2 i=floor(p),f=fract(p); vec2 u=f*f*(3.0-2.0*f);
+  return mix(mix(hash21(i),hash21(i+vec2(1,0)),u.x),mix(hash21(i+vec2(0,1)),hash21(i+vec2(1,1)),u.x),u.y);
+}
+vec3 oklab2lin(vec3 c){
+  float l=c.x+0.3963377774*c.y+0.2158037573*c.z;
+  float m=c.x-0.1055613458*c.y-0.0638541728*c.z;
+  float s=c.x-0.0894841775*c.y-1.2914855480*c.z;
+  l=l*l*l; m=m*m*m; s=s*s*s;
+  return vec3( 4.0767416621*l-3.3077115913*m+0.2309699292*s,
+              -1.2684380046*l+2.6097574011*m-0.3413193965*s,
+              -0.0041960863*l-0.7034186147*m+1.7076147010*s);
+}
+bool inG(vec3 c){ return all(greaterThanEqual(c,vec3(-0.0015)))&&all(lessThanEqual(c,vec3(1.0015))); }
+vec3 lin2srgb(vec3 c){ c=clamp(c,0.0,1.0); return mix(c*12.92,1.055*pow(c,vec3(1.0/2.4))-0.055,step(vec3(0.0031308),c)); }
+
+void main(){
+  vec2 uv=vUv;
+  if(uWarp>0.0001){
+    uv+=(vec2(vnoise(uv*2.05+uSeed*3.71),vnoise(uv*2.35+uSeed*1.93+19.7))-0.5)*uWarp;
+  }
+  vec2 p=vec2(uv.x*uAspect,uv.y);
+  float wsum=0.0,Lsum=0.0,Csum=0.0; vec2 absum=vec2(0.0),dirsum=vec2(0.0);
+  for(int i=0;i<${MAXP};i++){
+    if(i>=uCount) break;
+    vec2 d=p-vec2(uPos[i].x*uAspect,uPos[i].y);
+    float dd=dot(d,d)/max(uSig[i]*uSig[i],1e-5);
+    float w=(exp(-dd*uFall)+0.0012/(dd+0.02))*uGain[i];
+    vec2 ab=uLab[i].yz; float C=length(ab);
+    wsum+=w; Lsum+=w*uLab[i].x; absum+=w*ab; Csum+=w*C;
+    dirsum+= C>1e-5 ? w*(ab/C) : vec2(0.0);
+  }
+  float L=Lsum/wsum; vec2 abLin=absum/wsum; float Cmean=Csum/wsum;
+  vec2 dsum=dirsum/wsum; float dl=length(dsum);
+  /* chroma-preserving branch: keep the weighted hue direction but restore the
+     mean chroma, so a blend between hues never sinks toward grey. Only true
+     opposites (dl→0) are allowed to desaturate, and softly. */
+  vec2 abKeep = dl>1e-4 ? (dsum/dl)*Cmean*smoothstep(0.0,0.34,dl) : abLin;
+  vec2 ab=mix(abLin,abKeep,uPreserve);
+
+  vec3 lin=oklab2lin(vec3(L,ab));
+  if(!inG(lin)){                       /* gamut map by chroma, never hue-clip */
+    float lo=0.0,hi=1.0;
+    for(int k=0;k<12;k++){ float m=(lo+hi)*0.5; if(inG(oklab2lin(vec3(L,ab*m)))) lo=m; else hi=m; }
+    lin=oklab2lin(vec3(L,ab*lo));
+  }
+  vec3 col=lin2srgb(lin);
+  if(uHatch>0.0001){                   /* hairlines in soft patches, not everywhere */
+    float spots=smoothstep(0.42,0.62,vnoise(uv*2.2+vec2(3.1,7.4)+uSeed)*0.65+vnoise(uv*4.7+vec2(1.3,2.9)+uSeed)*0.35);
+    col=mix(col,vec3(1.0),hatchLine()*spots*uHatch*0.6);
+  }
+  if(uGrain>0.0001){
+    /* grain is measured in EXPORTED pixels, not preview pixels: a 1px grain is
+       one pixel of the saved PNG no matter what the card is showing */
+    vec2 opx=gl_FragCoord.xy*uOutScale;
+    vec3 g;
+    if(uGrainType<0.5){                    /* fine — monochrome, one channel */
+      g=vec3(grainAt(opx,0.0));
+    }else if(uGrainType<1.5){              /* colour — three independent draws */
+      g=vec3(grainAt(opx,0.0),grainAt(opx,71.0),grainAt(opx,137.0));
+    }else if(uGrainType<2.5){              /* film — clumps, plus emulsion falloff */
+      float f=grainAt(opx,0.0)*0.74+grainAt(opx*2.31,29.0)*0.26;
+      float lum=dot(col,vec3(0.2126,0.7152,0.0722));
+      /* silver sits thickest in the midtones — grain that ignores this eats the
+         shadows and dirties the highlights */
+      g=vec3(f*mix(0.30,1.0,clamp(4.0*lum*(1.0-lum),0.0,1.0)));
+    }else{                                 /* speckle — only the tail survives */
+      float s=grainAt(opx,0.0);
+      g=vec3(sign(s)*smoothstep(0.34,0.78,abs(s))*2.1);
+    }
+    col+=g*uGrain;
+  }
+  col+=(hash13(vec3(gl_FragCoord.xy,uSeed))-0.5)/255.0;   /* kill 8-bit banding */
+  gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
+}`;
+
+/* ══════════════════════════════════════════════════════════════
+   FLOW — moving silk, folded from the Superhuman texture study
+   (34_DESIGNSYSTEMS/superhuman/shader). Two-pass domain warp over fbm,
+   a five-stop ramp dark → light, sheen ridges where the field folds.
+   Grain and hatch are the studio's own, measured in exported pixels.
+   ══════════════════════════════════════════════════════════════ */
+const FLOW_FS=`
+precision highp float;
+uniform vec2  uRes;
+uniform float uTime,uSeed,uOutScale,uSuper,uGrainSeed;
+uniform vec3  uC[5];
+uniform vec3  uHi;
+uniform float uScale,uWarp,uStretch,uAngle,uDetail,uContrast,uSheen,uFolds;
+uniform float uHatch,uHatchGap,uHatchAngle;
+uniform float uGrain,uGrainType,uGrainSize;
+
+vec2 h2(vec2 p){ p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))); return -1.0+2.0*fract(sin(p)*43758.5453123); }
+float noise(vec2 p){                  /* gradient noise, quintic fade */
+  vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.0-15.0)+10.0);
+  return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),
+             mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);
+}
+float fbm(vec2 p){                    /* fractional octave count = soft Detail slider */
+  float a=0.5,s=0.0,n=0.0;
+  mat2 m=mat2(1.6,1.2,-1.2,1.6);
+  for(int i=0;i<6;i++){
+    float w=clamp(uDetail-float(i),0.0,1.0);
+    s+=a*w*noise(p); n+=a*w; p=m*p; a*=0.5;
+  }
+  return s/max(n,1e-3);
+}
+vec3 ramp(float t){
+  t=clamp(t,0.0,1.0)*4.0;
+  vec3 c=mix(uC[0],uC[1],smoothstep(0.0,1.0,t));
+  c=mix(c,uC[2],smoothstep(1.0,2.0,t));
+  c=mix(c,uC[3],smoothstep(2.0,3.0,t));
+  return mix(c,uC[4],smoothstep(3.0,4.0,t));
+}
+mat2 rot(float a){ float c=cos(a),s=sin(a); return mat2(c,-s,s,c); }
+float hash13(vec3 p3){ p3=fract(p3*0.1031); p3+=dot(p3,p3.zyx+31.32); return fract((p3.x+p3.y)*p3.z); }
+float gcell(vec2 p,float ch){
+  float s=ch+uGrainSeed*7.31;
+  return (hash13(vec3(p,s))+hash13(vec3(p,s+19.7))+hash13(vec3(p,s+53.3))-1.5)*0.5774;
+}
+float gsmooth(vec2 p,float ch){
+  vec2 i=floor(p),f=fract(p),u=f*f*(3.0-2.0*f);
+  return mix(mix(gcell(i,ch),gcell(i+vec2(1,0),ch),u.x),mix(gcell(i+vec2(0,1),ch),gcell(i+vec2(1,1),ch),u.x),u.y)*1.72;
+}
+float gsample(vec2 opx,float ch){
+  float sz=max(uGrainSize,0.001);
+  if(sz<1.0) return gcell(floor(opx),ch)*sz;
+  vec2 p=opx/sz;
+  return mix(gcell(floor(p),ch),gsmooth(p,ch),smoothstep(1.0,1.6,sz));
+}
+float grainAt(vec2 opx,float ch){
+  if(uSuper>0.5){
+    float o=uOutScale*0.25;
+    return (gsample(opx+vec2(-o,-o),ch)+gsample(opx+vec2(o,-o),ch)+gsample(opx+vec2(-o,o),ch)+gsample(opx+vec2(o,o),ch))*0.25;
+  }
+  return gsample(opx,ch);
+}
+${HATCH_GLSL}
+
+void main(){
+  vec2 p=(gl_FragCoord.xy-0.5*uRes)/uRes.y;   /* height-relative, so preview = export */
+  float t=uTime;
+  /* rotate, then stretch along one axis: long silky streaks */
+  vec2 q=rot(radians(uAngle))*p;
+  q.x/=uStretch;
+  q=q*uScale*2.0+uSeed;
+  /* two-pass domain warp — flowing, folded fabric of colour */
+  vec2 w1=vec2(fbm(q+vec2(0.0,0.11*t)),fbm(q+vec2(5.2,1.3)-0.08*t));
+  vec2 w2=vec2(fbm(q+uWarp*w1+vec2(1.7,9.2)+0.05*t),fbm(q+uWarp*w1+vec2(8.3,2.8)-0.06*t));
+  float f=fbm(q+uWarp*w2)*0.5+0.5;
+  f=clamp((f-0.5)*uContrast*1.6+0.5,0.0,1.0);
+  vec3 col=ramp(f);
+  /* sheen: thin bright ridges where the warped field folds over itself */
+  float ridge=abs(sin(3.14159*(f*uFolds+length(w2)*0.9)));
+  float sh=pow(1.0-ridge,8.0)*smoothstep(0.25,0.75,f);
+  col=mix(col,uHi,sh*uSheen);
+  /* iridescent drift: a tiny hue lean along the warp keeps flat areas alive */
+  col+=(vec3(0.02,-0.01,0.03)*w1.x+vec3(-0.02,0.015,0.01)*w2.y)*0.8;
+  if(uHatch>0.0001){
+    float spots=smoothstep(0.42,0.62,fbm(p*1.1+vec2(3.1,7.4)+0.02*t+uSeed)*0.5+0.5);
+    col=mix(col,vec3(1.0),hatchLine()*spots*uHatch*0.6);
+  }
+  col=clamp(col,0.0,1.0);
+  if(uGrain>0.0001){
+    vec2 opx=gl_FragCoord.xy*uOutScale;
+    vec3 g;
+    if(uGrainType<0.5){ g=vec3(grainAt(opx,0.0)); }
+    else if(uGrainType<1.5){ g=vec3(grainAt(opx,0.0),grainAt(opx,71.0),grainAt(opx,137.0)); }
+    else if(uGrainType<2.5){
+      float fg=grainAt(opx,0.0)*0.74+grainAt(opx*2.31,29.0)*0.26;
+      float lum=dot(col,vec3(0.2126,0.7152,0.0722));
+      g=vec3(fg*mix(0.30,1.0,clamp(4.0*lum*(1.0-lum),0.0,1.0)));
+    }else{
+      float s=grainAt(opx,0.0);
+      g=vec3(sign(s)*smoothstep(0.34,0.78,abs(s))*2.1);
+    }
+    col+=g*uGrain;
+  }
+  col+=(hash13(vec3(gl_FragCoord.xy,uSeed))-0.5)/255.0;   /* kill 8-bit banding */
+  gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
+}`;
+/* These three functions are written to stand alone — no outside variables —
+   because Copy code pastes their source straight into the snippet. The app and
+   the embed therefore draw with literally the same code. */
+function flowProgram(g,vs,fs){
+  function sh(t,src){var s=g.createShader(t);g.shaderSource(s,src);g.compileShader(s);
+    if(!g.getShaderParameter(s,g.COMPILE_STATUS))throw new Error(g.getShaderInfoLog(s));return s;}
+  var p=g.createProgram();
+  g.attachShader(p,sh(g.VERTEX_SHADER,vs)); g.attachShader(p,sh(g.FRAGMENT_SHADER,fs));
+  g.bindAttribLocation(p,0,'p'); g.linkProgram(p);
+  var L={},names=['uRes','uTime','uSeed','uOutScale','uSuper','uGrainSeed','uHi','uScale','uWarp','uStretch',
+    'uAngle','uDetail','uContrast','uSheen','uFolds','uHatch','uHatchGap','uHatchAngle','uGrain','uGrainType','uGrainSize'];
+  for(var i=0;i<names.length;i++) L[names[i]]=g.getUniformLocation(p,names[i]);
+  L.uC=g.getUniformLocation(p,'uC[0]');
+  return {p:p,L:L};
+}
+function flowQuad(g){
+  g.bindBuffer(g.ARRAY_BUFFER,g.createBuffer());
+  g.bufferData(g.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),g.STATIC_DRAW);
+  g.enableVertexAttribArray(0); g.vertexAttribPointer(0,2,g.FLOAT,false,0,0);
+}
+/* os = exported pixels per drawn pixel (grain + hatch sizes); tick re-rolls the
+   grain while it moves, so it reads as film rather than a dirty screen */
+function flowDraw(g,F,w,h,P,t,os,tick){
+  var L=F.L; g.useProgram(F.p); g.viewport(0,0,w,h);
+  g.uniform2f(L.uRes,w,h); g.uniform1f(L.uTime,t); g.uniform1f(L.uSeed,P.seed);
+  g.uniform1f(L.uOutScale,os); g.uniform1f(L.uSuper,os>1.15?1:0);
+  g.uniform1f(L.uGrainSeed,P.seed*3.1+(tick%997)*1.618);
+  g.uniform3fv(L.uC,P.c); g.uniform3fv(L.uHi,P.hi);
+  g.uniform1f(L.uScale,P.scale); g.uniform1f(L.uWarp,P.warp); g.uniform1f(L.uStretch,P.stretch);
+  g.uniform1f(L.uAngle,P.angle); g.uniform1f(L.uDetail,P.detail); g.uniform1f(L.uContrast,P.contrast);
+  g.uniform1f(L.uSheen,P.sheen); g.uniform1f(L.uFolds,P.folds);
+  g.uniform1f(L.uHatch,P.hatch); g.uniform1f(L.uHatchGap,P.hatchGap); g.uniform1f(L.uHatchAngle,P.hatchAngle);
+  g.uniform1f(L.uGrain,P.grain); g.uniform1f(L.uGrainType,P.grainType); g.uniform1f(L.uGrainSize,P.grainSize);
+  g.drawArrays(g.TRIANGLES,0,3);
+}
+
+const cv=document.getElementById('gl');
+const gl=cv.getContext('webgl',{preserveDrawingBuffer:true,antialias:false,alpha:false});
+let U={};
+(function initGL(){
+  const sh=(t,src)=>{const s=gl.createShader(t);gl.shaderSource(s,src);gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;};
+  const prog=gl.createProgram();
+  gl.attachShader(prog,sh(gl.VERTEX_SHADER,VS));
+  gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));
+  gl.bindAttribLocation(prog,0,'p');          /* both programs read the quad from slot 0 */
+  gl.linkProgram(prog); gl.useProgram(prog); U.prog=prog;
+  gl.bindBuffer(gl.ARRAY_BUFFER,gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  const loc=0;
+  gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  ['uLab','uPos','uSig','uGain'].forEach(n=>U[n]=gl.getUniformLocation(prog,n+'[0]'));
+  ['uCount','uAspect','uPreserve','uWarp','uFall','uSeed','uGrain',
+   'uGrainSize','uGrainType','uOutScale','uSuper','uHatch','uHatchGap','uHatchAngle'].forEach(n=>U[n]=gl.getUniformLocation(prog,n));
+})();
+const FLOW=flowProgram(gl,VS,FLOW_FS);
+/* what this device can actually draw into — 16384 on desktop, 4096 on plenty
+   of older and mobile GPUs */
+const MAXBUF=Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE),gl.getParameter(gl.MAX_VIEWPORT_DIMS)[0]);
+
+/* ══════════════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════════════ */
+const DEFAULTS={
+  mode:'single',
+  colors:['#3FBF5A'],
+  depth:0.44, softness:0.32, grain:0.25,
+  direction:148, seed:7412,
+  outW:1600, outH:1600, radius:22, zoom:1,
+  vivid:0.85, tones:5, hueShift:-10,
+  scatter:0.8, warp:0.10, bloom:0.55,
+  grainType:0, grainSize:1,
+  style:'soft',
+  /* flow */
+  scale:1.0, fwarp:1.9, stretch:2.4, detail:3.2, speed:0.3,
+  contrast:1.0, sheen:0.3, folds:2.0,
+  /* hatch — both styles */
+  hatch:0, hatchGap:7, hatchAngle:45
+};
+/* palettes and shapes taken from superhuman.com's own grounds and textures */
+const PRESETS={
+  Aurora:  {c:['#05262a','#0c4243','#1d4f7a','#4a52cf','#8a7cf2'],scale:.85,fwarp:1.9,stretch:4.6,angle:-30,detail:2.6,speed:.3, contrast:.95,sheen:.22,folds:1.6,hatch:0,  hatchGap:7,hatchAngle:45,grain:.04},
+  Plate:   {c:['#bcd7f5','#d4c7ff','#f3b3de','#ffdcc9','#fff4f8'],scale:1.3,fwarp:1.7,stretch:1.6,angle:18, detail:3.0,speed:.22,contrast:.85,sheen:.38,folds:2.0,hatch:.5, hatchGap:7,hatchAngle:45,grain:.02},
+  Dusk:    {c:['#140a26','#281647','#3f256f','#714cb6','#bf6193'],scale:1.0,fwarp:2.0,stretch:2.4,angle:-20,detail:4.0,speed:.3, contrast:1.25,sheen:.35,folds:2.6,hatch:0, hatchGap:8,hatchAngle:45,grain:.03},
+  Mulberry:{c:['#241013','#421d24','#792d4b','#bf6193','#f6aadd'],scale:1.2,fwarp:2.2,stretch:2.0,angle:28, detail:3.8,speed:.3, contrast:1.2,sheen:.4, folds:2.4,hatch:.18,hatchGap:6,hatchAngle:45,grain:.03},
+  Sky:     {c:['#314682','#7c9ad3','#a8a4d8','#b070c0','#f7dbff'],scale:.8, fwarp:1.5,stretch:1.8,angle:-8, detail:3.2,speed:.2, contrast:1.0,sheen:.3, folds:1.8,hatch:0,  hatchGap:8,hatchAngle:45,grain:.025}
+};
+let S=structuredClone(DEFAULTS), STOPS=[], PTS=[];
+const spreadOf  = s => 0.30+0.78*s;
+const falloffOf = s => 2.30-1.62*s;
+
+/* ══════════════════════════════════════════════════════════════
+   THEME
+   ══════════════════════════════════════════════════════════════ */
+const ICON_SUN=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+  <circle cx="8" cy="8" r="3.1"/><path d="M8 1v1.6M8 13.4V15M15 8h-1.6M2.6 8H1M12.9 3.1l-1.1 1.1M4.2 11.8l-1.1 1.1M12.9 12.9l-1.1-1.1M4.2 4.2 3.1 3.1"/></svg>`;
+const ICON_MOON=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M13.5 9.6A5.9 5.9 0 0 1 6.4 2.5a5.9 5.9 0 1 0 7.1 7.1Z"/></svg>`;
+const themeBtn=document.getElementById('themeBtn');
+function setTheme(t){
+  document.documentElement.dataset.theme=t;
+  themeBtn.innerHTML = t==='light' ? ICON_MOON : ICON_SUN;
+  try{ localStorage.setItem('gs-theme',t); }catch(e){}
+}
+themeBtn.addEventListener('click',()=>setTheme(document.documentElement.dataset.theme==='light'?'dark':'light'));
+(function(){
+  let t=null; try{ t=localStorage.getItem('gs-theme'); }catch(e){}
+  setTheme(t || (matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+})();
+
+/* ══════════════════════════════════════════════════════════════
+   SLIDERS — label and explainer share one line
+   ══════════════════════════════════════════════════════════════ */
+const pc=v=>Math.round(v*100);
+const SPECS={
+  ctlLook:[
+    {k:'depth',    l:'Depth',    hint:'light to dark',   min:0,max:1,step:.01,f:pc},
+    {k:'softness', l:'Softness', hint:'zones to wash',   min:0,max:1,step:.01,f:pc},
+    {k:'grain',    l:'Grain',                            min:0,max:1,step:.01,f:pc}
+  ],
+  ctlFlow:[
+    {k:'scale',    l:'Scale',                              min:.3,max:4,step:.01,f:v=>v.toFixed(2)+'×'},
+    {k:'fwarp',    l:'Warp',     hint:'how folded',        min:0,max:4,step:.01,f:v=>v.toFixed(2)},
+    {k:'stretch',  l:'Stretch',  hint:'long streaks',      min:1,max:6,step:.01,f:v=>v.toFixed(2)+'×'},
+    {k:'detail',   l:'Detail',                             min:1,max:6,step:.01,f:v=>v.toFixed(2)},
+    {k:'contrast', l:'Contrast',                           min:.5,max:2.2,step:.01,f:v=>v.toFixed(2)},
+    {k:'sheen',    l:'Sheen',    hint:'shine on the folds', min:0,max:1,step:.01,f:pc},
+    {k:'folds',    l:'Folds',                              min:.5,max:6,step:.01,f:v=>v.toFixed(2)}
+  ],
+  ctlHatch:[
+    {k:'hatch',    l:'Hatch',    hint:'fine lines in soft patches', min:0,max:1,step:.01,f:pc}
+  ],
+  ctlMotion:[
+    {k:'speed',    l:'Speed',                              min:0,max:1.5,step:.01,f:v=>v.toFixed(2)+'×'}
+  ],
+  ctlAdvHatch:[
+    {k:'hatchGap',  l:'Hatch gap',  hint:'in exported pixels', min:3,max:18,step:.1,f:v=>v.toFixed(1)+'px'},
+    {k:'hatchAngle',l:'Hatch angle',                           min:-90,max:90,step:1,f:v=>Math.round(v)+'°'}
+  ],
+  ctlGrain:[
+    {k:'grainSize',l:'Grain size',hint:'in exported pixels', min:0.01,max:3,step:.01,
+     f:v=>v.toFixed(2)+'px'}
+  ],
+  ctlFmt:[
+    {k:'radius',   l:'Radius',                           min:0,max:90,step:1,f:v=>v+'px'}
+  ],
+  ctlAdvMix:[
+    {k:'vivid',    l:'Vivid mix', hint:'no grey midpoints', min:0,max:1,step:.01,f:pc}
+  ],
+  ctlAdvSingle:[
+    {k:'tones',    l:'Tones',                            min:2,max:7,step:1,f:v=>v},
+    {k:'hueShift', l:'Hue shift', hint:'across the run',  min:-45,max:45,step:1,f:v=>(v>0?'+':'')+v+'°'}
+  ],
+  ctlAdvComp:[
+    {k:'scatter',  l:'Scatter',   hint:'0 = straight ramp', min:0,max:1.6,step:.01,f:v=>pc(v/1.6)},
+    {k:'bloom',    l:'Highlight', hint:'glow of lightest',  min:0,max:1.4,step:.01,f:v=>pc(v/1.4)},
+    {k:'warp',     l:'Distortion',                          min:0,max:0.4,step:.005,f:v=>pc(v/0.4)}
+  ]
+};
+const SLIDERS={};
+function makeSlider(sp,host){
+  const el=document.createElement('div');
+  el.className='ctl';
+  el.tabIndex=0;
+  el.setAttribute('role','slider');
+  el.setAttribute('aria-label',sp.l);
+  el.setAttribute('aria-valuemin',sp.min);
+  el.setAttribute('aria-valuemax',sp.max);
+  /* the hint moves to the tooltip: in a 34px row it lengthened the label until
+     the value tick struck through it */
+  if(sp.hint) el.title=`${sp.l} — ${sp.hint}`;
+  el.innerHTML=`<div class="fill"></div><div class="tick"></div>
+    <div class="lab">
+      <span class="ctl-lab">${sp.l}</span>
+      <span class="ctl-val"></span>
+    </div>`;
+  host.appendChild(el);
+  const track=el,fill=el.querySelector('.fill'),
+        tick=el.querySelector('.tick'),val=el.querySelector('.ctl-val');
+  function paint(){
+    const t=clamp((S[sp.k]-sp.min)/(sp.max-sp.min));
+    fill.style.width=(t*100)+'%';
+    /* the clamp keeps the marker inside the row at both ends — at 0 it reads as
+       "sitting at the floor", not as a missing control */
+    tick.style.left=`clamp(8px, ${(t*100).toFixed(3)}%, calc(100% - 8px))`;
+    val.textContent=sp.f(S[sp.k]);
+    el.setAttribute('aria-valuenow',S[sp.k]);
+  }
+  function set(t){
+    let v=sp.min+clamp(t)*(sp.max-sp.min);
+    v=Math.round(Math.round(v/sp.step)*sp.step*1e6)/1e6;
+    if(v!==S[sp.k]){ S[sp.k]=v; paint(); build(); }
+  }
+  let drag=false;
+  const fromX=e=>{const r=track.getBoundingClientRect();return (e.clientX-r.left)/r.width;};
+  track.addEventListener('pointerdown',e=>{drag=true;track.setPointerCapture(e.pointerId);set(fromX(e));});
+  track.addEventListener('pointermove',e=>{if(drag)set(fromX(e));});
+  track.addEventListener('pointerup',e=>{drag=false;track.releasePointerCapture(e.pointerId);});
+  track.addEventListener('keydown',e=>{
+    const d=e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0; if(!d)return; e.preventDefault();
+    S[sp.k]=clamp(Math.round((S[sp.k]+d*sp.step*(e.shiftKey?.2:1))*1e6)/1e6,sp.min,sp.max);
+    paint(); build();
+  });
+  el._paint=paint; paint(); SLIDERS[sp.k]=el;
+}
+for(const [host,list] of Object.entries(SPECS)){
+  const h=document.getElementById(host); list.forEach(sp=>makeSlider(sp,h));
+}
+
+/* ── dial ── */
+const dial=document.getElementById('dial'), ind=dial.querySelector('.ind');
+function paintDial(){
+  ind.style.transform=`rotate(${S.direction}deg)`;
+  document.getElementById('angleVal').textContent=Math.round(S.direction)+'°';
+  dial.setAttribute('aria-valuenow',Math.round(S.direction));
+}
+function dialFrom(e,shift){
+  const r=dial.getBoundingClientRect();
+  let a=(Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2))/D+90+360)%360;
+  if(shift) a=Math.round(a/15)*15%360;
+  S.direction=Math.round(a); paintDial(); build();
+}
+let dDrag=false;
+dial.addEventListener('pointerdown',e=>{dDrag=true;dial.setPointerCapture(e.pointerId);dialFrom(e,e.shiftKey);});
+dial.addEventListener('pointermove',e=>{if(dDrag)dialFrom(e,e.shiftKey);});
+dial.addEventListener('pointerup',e=>{dDrag=false;dial.releasePointerCapture(e.pointerId);});
+dial.addEventListener('keydown',e=>{
+  const d=e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0; if(!d)return; e.preventDefault();
+  S.direction=(S.direction+d*(e.shiftKey?15:1)+360)%360; paintDial(); build();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   COLOUR TILES — the swatch is the picker; it opens in place
+   ══════════════════════════════════════════════════════════════ */
+/* the picker itself speaks HSB — the familiar hue / saturation / brightness of
+   every design tool. Oklab is for blending, not for choosing. */
+function rgb2hsv([r,g,b]){
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn;
+  let h=0;
+  if(d) h=60*(mx===r ? ((g-b)/d+(g<b?6:0)) : mx===g ? ((b-r)/d+2) : ((r-g)/d+4));
+  return {h, s: mx?d/mx:0, v: mx};
+}
+function hsv2rgb(h,s,v){
+  h=((h%360)+360)%360;
+  const c=v*s, x=c*(1-Math.abs((h/60)%2-1)), m=v-c;
+  const t=[[c,x,0],[x,c,0],[0,c,x],[0,x,c],[x,0,c],[c,0,x]][Math.floor(h/60)%6];
+  return [t[0]+m,t[1]+m,t[2]+m];
+}
+/* the Photoshop pipette: fat bulb up-right, hairline point down-left */
+const ICON_DROP=`<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+  <g transform="rotate(-45 8 8)">
+    <rect x="5.9" y="1.3" width="4.2" height="3.9" rx="1.5"/>
+    <rect x="6.7" y="4.6" width="2.6" height="5.7"/>
+    <path d="M6.7 10.1h2.6L8 14.7 6.7 10.1Z"/>
+  </g></svg>`;
+
+const tileHost=document.getElementById('tileHost');
+let openIdx=-1;
+function setOpen(idx){
+  openIdx=idx;
+  [...tileHost.children].forEach((w,j)=>w.classList.toggle('open',j===idx));
+}
+
+function renderTiles(){
+  tileHost.innerHTML='';
+  const single=S.mode==='single';
+  const list=single?S.colors.slice(0,1):S.colors;
+  list.forEach((hex,i)=>{
+    const wrap=document.createElement('div');
+    wrap.className='tilewrap'+(openIdx===i?' open':'');
+    wrap.innerHTML=`
+      <div class="tile${single?' solo':''}${!single&&S.colors.length<3?' solo':''}">
+        <input class="hex" value="${hex}" spellcheck="false" maxlength="7">
+        <span class="spacer"></span>
+        <span class="chev"><span></span><span></span></span>
+        <button class="kill" title="Remove">×</button>
+      </div>
+      <div class="pickwrap"><div class="pick"><div class="pickinner">
+        <div class="pad"><div class="dot"></div></div>
+        <div class="hue"><div class="dot"></div></div>
+        <div class="pickfoot">
+          <label class="fld" data-f="h"><b>H</b><input inputmode="numeric" aria-label="Hue"><i>°</i></label>
+          <label class="fld" data-f="s"><b>S</b><input inputmode="numeric" aria-label="Saturation"><i>%</i></label>
+          <label class="fld" data-f="v"><b>B</b><input inputmode="numeric" aria-label="Brightness"><i>%</i></label>
+          <button class="eyedrop off" type="button" title="Pick a colour off the screen">${ICON_DROP}</button>
+        </div>
+      </div></div></div>`;
+    const tile=wrap.querySelector('.tile'), tx=wrap.querySelector('.hex'),
+          pad=wrap.querySelector('.pad'), padDot=pad.querySelector('.dot'),
+          hue=wrap.querySelector('.hue'), hueDot=hue.querySelector('.dot'),
+          eye=wrap.querySelector('.eyedrop'),
+          flds={h:wrap.querySelector('[data-f=h] input'),
+                s:wrap.querySelector('[data-f=s] input'),
+                v:wrap.querySelector('[data-f=v] input')};
+
+    /* hue and saturation survive a trip through grey or black, which they
+       would not if we re-derived them from the hex every time */
+    const mem=rgb2hsv(hex2rgb(S.colors[i])||[0,0,0]);
+    function syncMem(){
+      const n=rgb2hsv(hex2rgb(S.colors[i])||[0,0,0]);
+      if(n.s>0.004) mem.h=n.h;
+      if(n.v>0.004) mem.s=n.s;
+      mem.v=n.v;
+    }
+    function paintTile(){
+      const c=hex2lch(S.colors[i])||{L:.6}, fg=c.L>0.62?'#000':'#fff';
+      tile.style.background=S.colors[i]; tile.style.color=fg;
+      tile.querySelector('.kill').style.color=fg;
+      tx.style.color=fg;
+      if(document.activeElement!==tx) tx.value=S.colors[i];
+    }
+    function paintPicker(){
+      const hueHex=rgb2hex(hsv2rgb(mem.h,1,1));
+      pad.style.background=`linear-gradient(to top,#000,rgba(0,0,0,0)),linear-gradient(to right,#FFF,${hueHex})`;
+      padDot.style.left=(mem.s*100)+'%';
+      padDot.style.top =((1-mem.v)*100)+'%';
+      hueDot.style.left=(mem.h/360*100)+'%';
+      const shown={h:Math.round(mem.h),s:Math.round(mem.s*100),v:Math.round(mem.v*100)};
+      for(const k in flds) if(document.activeElement!==flds[k]) flds[k].value=shown[k];
+    }
+    function setColor(hexNew,keepMem){
+      S.colors[i]=hexNew;
+      if(!keepMem) syncMem();
+      paintTile(); paintPicker(); build();
+    }
+    const applyHsv=()=>setColor(rgb2hex(hsv2rgb(mem.h,mem.s,mem.v)),true);
+
+    /* open / close — toggle the class on the live DOM. Re-rendering here would
+       hand the browser fresh nodes already in their end state, and the CSS
+       transitions would never run. */
+    tile.addEventListener('click',e=>{
+      if(e.target.closest('.hex')||e.target.closest('.kill')) return;
+      setOpen(openIdx===i ? -1 : i);
+      if(openIdx===i) paintPicker();
+    });
+    tx.addEventListener('input',e=>{
+      let v=e.target.value.trim(); if(v && v[0]!=='#') v='#'+v;
+      const rgb=hex2rgb(v); if(!rgb) return;
+      setColor(rgb2hex(rgb));
+    });
+    tx.addEventListener('blur',paintTile);
+    wrap.querySelector('.kill').addEventListener('click',e=>{
+      e.stopPropagation();
+      if(S.colors.length<3) return;
+      S.colors.splice(i,1); openIdx=-1; renderTiles(); build();
+    });
+
+    /* pad → saturation × brightness */
+    const grab=(el,fn)=>{
+      let on=false;
+      el.addEventListener('pointerdown',e=>{on=true;try{el.setPointerCapture(e.pointerId)}catch(x){};fn(e);});
+      el.addEventListener('pointermove',e=>{if(on)fn(e);});
+      el.addEventListener('pointerup',e=>{on=false;try{el.releasePointerCapture(e.pointerId)}catch(x){}});
+      el.addEventListener('pointercancel',()=>{on=false});
+    };
+    grab(pad,e=>{
+      const r=pad.getBoundingClientRect();
+      mem.s=clamp((e.clientX-r.left)/r.width);
+      mem.v=1-clamp((e.clientY-r.top)/r.height);
+      applyHsv();
+    });
+    grab(hue,e=>{
+      const r=hue.getBoundingClientRect();
+      mem.h=clamp((e.clientX-r.left)/r.width)*360;
+      applyHsv();
+    });
+
+    /* H / S / B are typed into directly, one field each */
+    for(const k in flds){
+      const el=flds[k];
+      const put=n=>{ mem[k]=k==='h'?((n%360)+360)%360:clamp(n,0,100)/100; applyHsv(); };
+      el.addEventListener('input',e=>{
+        const n=parseFloat(e.target.value.replace(/[^\d.-]/g,''));
+        if(!isNaN(n)) put(n);
+      });
+      el.addEventListener('keydown',e=>{
+        const d=e.key==='ArrowUp'?1:e.key==='ArrowDown'?-1:0; if(!d) return;
+        e.preventDefault();
+        const cur=k==='h'?mem.h:mem[k]*100;
+        put(cur+d*(e.shiftKey?10:1));
+        el.value=Math.round(k==='h'?mem.h:mem[k]*100);
+      });
+      el.addEventListener('focus',()=>el.select());
+      el.addEventListener('blur',paintPicker);
+    }
+
+    /* screen eyedropper, where the browser has one */
+    if(window.EyeDropper){
+      eye.classList.remove('off');
+      eye.addEventListener('click',async e=>{
+        e.stopPropagation();
+        try{ const r=await new EyeDropper().open(); setColor(rgb2hex(hex2rgb(r.sRGBHex))); }catch(err){}
+      });
+    }
+
+    tileHost.appendChild(wrap);
+    paintTile(); paintPicker();
+  });
+}
+addEventListener('keydown',e=>{ if(e.key==='Escape'&&openIdx>=0) setOpen(-1); });
+
+document.getElementById('addColor').addEventListener('click',()=>{
+  if(S.colors.length>=MAXP-1) return toast('That is plenty');
+  const last=hex2lch(S.colors[S.colors.length-1])||{L:.6,C:.14,H:140};
+  const H=(last.H+62)%360, L=clamp(last.L+(last.L>0.6?-0.16:0.14),0.15,0.9);
+  S.colors.push(lch2hex(L,Math.min(last.C*1.02,maxC(L,H)*0.9),H).hex);
+  renderTiles(); build();
+});
+addEventListener('paste',e=>{
+  if(e.target.matches('input,[contenteditable]')) return;
+  const t=(e.clipboardData||window.clipboardData).getData('text')||'';
+  const found=(t.match(/#?\b[0-9a-fA-F]{6}\b/g)||[]).map(hex2rgb).filter(Boolean).map(rgb2hex).slice(0,MAXP-1);
+  if(!found.length) return;
+  S.colors=found; S.mode=found.length>1?'multi':'single'; openIdx=-1;
+  syncMode(); renderTiles(); build();
+  toast(found.length+' colour'+(found.length>1?'s':'')+' pasted');
+});
+
+/* ── mode ── */
+function syncMode(){
+  const single=S.mode==='single';
+  if(!single && S.colors.length<2){
+    const b=hex2lch(S.colors[0])||{L:.6,C:.14,H:140};
+    const H=(b.H+62)%360, L=clamp(b.L-0.14,0.15,0.9);
+    S.colors.push(lch2hex(L,Math.min(b.C,maxC(L,H)*0.9),H).hex);
+  }
+  document.querySelectorAll('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===S.mode)));
+  document.getElementById('addColor').classList.toggle('off',single);
+  document.getElementById('ramp').classList.toggle('off',!single);
+  document.getElementById('ctlAdvSingle').classList.toggle('off',!single);
+  document.getElementById('modeHint').textContent = single
+    ? 'One colour becomes a run of tones in the same family — pale highlight through deep shadow.'
+    : 'Your exact colours are kept. Depth adds light and shade without shifting the hues.';
+}
+/* ── style ── */
+const STYLE_HINT={
+  soft:'Soft blends your colours into a still, smooth field.',
+  flow:'Flow folds your colours into moving silk, dark to light. Pick a preset or use your own colours.'
+};
+function syncStyle(){
+  const flow=S.style==='flow';
+  document.querySelectorAll('#styleSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===S.style)));
+  document.getElementById('styleHint').textContent=STYLE_HINT[S.style];
+  ['presetRow','ctlFlow','motionGrp','copyCode','videoRow'].forEach(id=>document.getElementById(id).classList.toggle('off',!flow));
+  ['ctlAdvMix','ctlAdvComp','copyCss'].forEach(id=>document.getElementById(id).classList.toggle('off',flow));
+  SLIDERS.softness.classList.toggle('off',flow);
+  syncPlay();
+}
+document.getElementById('styleSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  S.style=b.dataset.v; syncStyle(); build();
+});
+const presetRow=document.getElementById('presetRow');
+presetRow.innerHTML=Object.keys(PRESETS).map(n=>`<button data-p="${n}" aria-pressed="false">${n}</button>`).join('');
+presetRow.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const p=PRESETS[b.dataset.p];
+  S.mode='multi'; S.colors=p.c.map(h=>h.toUpperCase()); S.depth=0; openIdx=-1;
+  ['scale','fwarp','stretch','detail','speed','contrast','sheen','folds','hatch','hatchGap','hatchAngle'].forEach(k=>S[k]=p[k]);
+  S.direction=(p.angle+360)%360;
+  /* the study's grain was uniform ±g/2; the studio's is a bell of the same spread */
+  S.grain=snap(clamp(p.grain*4.55),.01); S.grainType=0;
+  syncMode(); syncGrainSeg(); renderTiles(); paintDial();
+  Object.values(SLIDERS).forEach(s=>s._paint());
+  build();
+});
+
+/* ── motion ── */
+const ICON_PAUSE=`<svg viewBox="0 0 16 16" fill="currentColor"><rect x="4" y="3" width="2.6" height="10" rx="1"/><rect x="9.4" y="3" width="2.6" height="10" rx="1"/></svg>`;
+const ICON_PLAY=`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 3.2v9.6c0 .5.5.8.9.5l7.2-4.8c.4-.3.4-.8 0-1L5.9 2.7c-.4-.3-.9 0-.9.5z"/></svg>`;
+const playBtn=document.getElementById('playBtn');
+let playing=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+let ftime=0, gclock=0, raf=0, lastT=0;
+const grainTick=()=>Math.floor(gclock*24);   /* grain re-rolls at film rate, not screen rate */
+function frame(now){
+  raf=0;
+  if(S.style!=='flow'||!playing||document.hidden) return;
+  const dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
+  ftime+=dt*S.speed; gclock+=dt;
+  render(cv.width,cv.height);
+  raf=requestAnimationFrame(frame);
+}
+function syncPlay(){
+  playBtn.innerHTML=playing?ICON_PAUSE:ICON_PLAY;
+  playBtn.title=playing?'Pause — Space':'Play — Space';
+  playBtn.setAttribute('aria-label',playing?'Pause':'Play');
+  if(S.style==='flow'&&playing&&!document.hidden&&!raf){ lastT=performance.now(); raf=requestAnimationFrame(frame); }
+}
+playBtn.addEventListener('click',()=>{ playing=!playing; syncPlay(); });
+document.addEventListener('visibilitychange',syncPlay);
+
+/* ── grain type ── */
+function syncGrainSeg(){
+  document.querySelectorAll('#grainSeg button').forEach(b=>
+    b.setAttribute('aria-pressed',String(+b.dataset.v===S.grainType)));
+}
+document.getElementById('grainSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  S.grainType=+b.dataset.v; syncGrainSeg(); build();
+});
+
+document.getElementById('modeSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  S.mode=b.dataset.v; openIdx=-1; syncMode(); renderTiles(); build();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   FORMAT — ratio chips keep the long side, recompute the short one
+   ══════════════════════════════════════════════════════════════ */
+const RATIOS=[{l:'1:1',v:1},{l:'4:5',v:0.8},{l:'3:2',v:1.5},{l:'16:9',v:16/9}];
+const aspectSeg=document.getElementById('aspectSeg');
+function currentRatio(){
+  const a=S.outW/S.outH;
+  return RATIOS.find(r=>Math.abs(r.v-a)<0.006) || null;
+}
+function renderAspects(){
+  const active=currentRatio();
+  aspectSeg.innerHTML=RATIOS.map(r=>
+    `<button data-v="${r.v}" aria-pressed="${active&&active.l===r.l}">${r.l}</button>`).join('')
+    + (active?'':`<button data-custom="1" aria-pressed="true">Custom</button>`);
+}
+aspectSeg.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b||b.dataset.custom) return;
+  const v=+b.dataset.v, big=Math.max(S.outW,S.outH);
+  if(v>=1){ S.outW=big; S.outH=Math.round(big/v); }
+  else    { S.outH=big; S.outW=Math.round(big*v); }
+  renderAspects(); resize();
+});
+
+/* size label — double-click to type an exact pixel size */
+const sizeBar=document.querySelector('.sizebar'), sizeLab=document.getElementById('sizeLab'),
+      zoomLab=document.getElementById('zoomLab'), zRange=document.getElementById('zRange');
+/* the pill's slider is logarithmic against the fit, so a step feels the same
+   size whether you are at a quarter or at eight times */
+const ZMIN=0.25, ZMAX=8, ZLO=Math.log(ZMIN), ZHI=Math.log(ZMAX);
+const zoomToT=z=>clamp((Math.log(z)-ZLO)/(ZHI-ZLO));
+const tToZoom=t=>Math.exp(ZLO+clamp(t)*(ZHI-ZLO));
+function paintSize(){
+  sizeLab.textContent=`${S.outW} × ${S.outH}`;
+  /* the true scale of the preview against the exported pixels, not a multiple
+     of the fit — 100% means one screen pixel per exported pixel */
+  const p=viewW/S.outW*100;
+  zoomLab.textContent=(p<10?p.toFixed(1):Math.round(p))+'%';
+  if(document.activeElement!==zRange) zRange.value=zoomToT(S.zoom);
+}
+zRange.addEventListener('input',e=>{ S.zoom=tToZoom(+e.target.value); resize(); });
+const nudgeZoom=f=>{ S.zoom=clamp(S.zoom*f,0.001,1000); resize(); };
+document.getElementById('zOut').addEventListener('click',()=>nudgeZoom(1/1.25));
+document.getElementById('zIn') .addEventListener('click',()=>nudgeZoom(1.25));
+sizeLab.addEventListener('dblclick',()=>{
+  const inp=document.createElement('input');
+  inp.className='sizeinput'; inp.value=`${S.outW} × ${S.outH}`;
+  sizeBar.replaceChild(inp,sizeLab); inp.focus(); inp.select();
+  const commit=()=>{
+    const m=inp.value.match(/(\d{2,5})\s*[x×*, ]\s*(\d{2,5})/);
+    if(m){ S.outW=clamp(+m[1],64,8192)|0; S.outH=clamp(+m[2],64,8192)|0; }
+    sizeBar.replaceChild(sizeLab,inp);
+    paintSize(); renderAspects(); resize();
+  };
+  inp.addEventListener('blur',commit);
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter') inp.blur();
+    if(e.key==='Escape'){ inp.value=`${S.outW} × ${S.outH}`; inp.blur(); }
+  });
+});
+
+/* ── advanced / misc ── */
+const advToggle=document.getElementById('advToggle'), adv=document.getElementById('adv');
+advToggle.addEventListener('click',()=>{
+  const open=advToggle.getAttribute('aria-expanded')==='true';
+  advToggle.setAttribute('aria-expanded',String(!open));
+  adv.classList.toggle('off',open);
+});
+const seedEl=document.getElementById('seed');
+seedEl.value=S.seed;
+seedEl.addEventListener('input',e=>{ S.seed=parseInt(e.target.value.replace(/\D/g,'')||'0',10); build(); });
+/* shuffle rolls the arrangement — everything that decides where the colours
+   land, never what they are. Each value it touches owns a control in the rail,
+   so every one of them is repainted: the panel never disagrees with the canvas. */
+const rand=(a,b)=>a+Math.random()*(b-a);
+const snap=(v,step)=>Math.round(Math.round(v/step)*step*1e6)/1e6;
+document.getElementById('shuffle').addEventListener('click',()=>{
+  S.seed=Math.floor(Math.random()*9999);
+  S.direction=Math.round(rand(0,360))%360;
+  if(S.style==='flow'){ seedEl.value=S.seed; paintDial(); build(); return; }
+  /* mid-range rolls only — the extremes of these three are for hand-tuning,
+     not for a button you press twenty times in a row */
+  S.scatter=snap(rand(0.45,1.25),.01);
+  S.bloom=snap(rand(0.25,1.00),.01);
+  S.warp=snap(rand(0,0.22),.005);
+  seedEl.value=S.seed;
+  paintDial();
+  ['scatter','bloom','warp'].forEach(k=>SLIDERS[k]._paint());
+  build();
+});
+const overlay=document.getElementById('overlay');
+document.getElementById('toggleContent').addEventListener('click',e=>{
+  const on=!overlay.classList.toggle('off');
+  e.currentTarget.setAttribute('aria-pressed',String(on));
+});
+function applyState(next){
+  S=structuredClone(next); seedEl.value=S.seed; openIdx=-1;
+  syncMode(); syncStyle(); syncGrainSeg(); renderTiles(); paintDial(); paintSize(); renderAspects();
+  Object.values(SLIDERS).forEach(s=>s._paint());
+  resize();
+}
+/* no confirm: reset happens at once and the toast carries the way back */
+document.getElementById('reset').addEventListener('click',()=>{
+  const before=structuredClone(S);
+  applyState(DEFAULTS);
+  toast('Reset · <u>Undo</u>',()=>{ applyState(before); toast('Restored'); });
+});
+
+/* ══════════════════════════════════════════════════════════════
+   BUILD + RENDER
+   ══════════════════════════════════════════════════════════════ */
+const engine=()=>({direction:S.direction,seed:S.seed,scatter:S.scatter,bloom:S.bloom,
+                   spread:spreadOf(S.softness),fall:falloffOf(S.softness)});
+function currentStops(){
+  const lch=S.colors.map(hex2lch).filter(Boolean);
+  if(!lch.length) return [lch2hex(0.6,0.14,140)];
+  return S.mode==='single'
+    ? buildFamily(lch[0],{tones:S.tones,range:0.10+S.depth*0.55,hueShift:S.hueShift})
+    : buildPalette(lch.slice(0,MAXP-1),{depth:S.depth});
+}
+/* flow reads its ramp from the same stops as soft: sorted dark → light and
+   resampled to five in Oklab, with a highlight lifted off the lightest */
+let FP=null;
+function flowParams(){
+  const labs=STOPS.map(s=>[s.L,s.C*Math.cos(s.H*D),s.C*Math.sin(s.H*D)]).sort((a,b)=>a[0]-b[0]);
+  const m=labs.length, c=[];
+  const toRgb=([L,a,b])=>hex2rgb(lch2hex(L,Math.hypot(a,b),(Math.atan2(b,a)/D+360)%360).hex);
+  for(let i=0;i<5;i++){
+    const u=m===1?0:i/4*(m-1), k=Math.min(Math.floor(u),Math.max(m-2,0)), f=m===1?0:u-k;
+    const A=labs[k], B=labs[Math.min(k+1,m-1)];
+    c.push(...toRgb(A.map((v,j)=>v+(B[j]-v)*f)));
+  }
+  const top=labs[m-1];
+  const hi=toRgb([Math.min(0.985,top[0]+0.12),top[1]*0.6,top[2]*0.6]);
+  return {c,hi,scale:S.scale,warp:S.fwarp,stretch:S.stretch,angle:S.direction,detail:S.detail,
+    contrast:S.contrast,sheen:S.sheen,folds:S.folds,hatch:S.hatch,hatchGap:S.hatchGap,hatchAngle:S.hatchAngle,
+    grain:S.grain*0.22,grainType:S.grainType,grainSize:S.grainSize,seed:(S.seed%1000)/10,speed:S.speed};
+}
+function render(w,h){
+  if(S.style==='flow'){ flowDraw(gl,FLOW,w,h,FP,ftime,S.outH/Math.max(h,1),grainTick()); return; }
+  gl.useProgram(U.prog);
+  gl.viewport(0,0,w,h);
+  const n=Math.min(PTS.length,MAXP);
+  const lab=new Float32Array(MAXP*3),pos=new Float32Array(MAXP*2),
+        sig=new Float32Array(MAXP),gain=new Float32Array(MAXP);
+  for(let i=0;i<n;i++){
+    const p=PTS[i],{L,C,H}=p.lch;
+    lab[i*3]=L; lab[i*3+1]=C*Math.cos(H*D); lab[i*3+2]=C*Math.sin(H*D);
+    pos[i*2]=p.x; pos[i*2+1]=1-p.y;                 // GL origin is bottom-left
+    sig[i]=p.sig; gain[i]=p.gain;
+  }
+  gl.uniform3fv(U.uLab,lab); gl.uniform2fv(U.uPos,pos);
+  gl.uniform1fv(U.uSig,sig); gl.uniform1fv(U.uGain,gain);
+  gl.uniform1i(U.uCount,n);
+  gl.uniform1f(U.uAspect,w/h);
+  gl.uniform1f(U.uPreserve,S.vivid);
+  gl.uniform1f(U.uWarp,S.warp);
+  gl.uniform1f(U.uFall,falloffOf(S.softness));
+  gl.uniform1f(U.uSeed,(S.seed%997)/97);
+  gl.uniform1f(U.uGrain,S.grain*0.22);
+  /* export pixels covered by one fragment: 1 while exporting, >1 whenever the
+     preview is showing the card smaller than it will be saved */
+  const outScale=S.outH/Math.max(h,1);
+  gl.uniform1f(U.uGrainSize,S.grainSize);
+  gl.uniform1f(U.uGrainType,S.grainType);
+  gl.uniform1f(U.uOutScale,outScale);
+  gl.uniform1f(U.uSuper,outScale>1.15?1:0);
+  gl.uniform1f(U.uHatch,S.hatch); gl.uniform1f(U.uHatchGap,S.hatchGap); gl.uniform1f(U.uHatchAngle,S.hatchAngle);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+}
+const ramp=document.getElementById('ramp'), card=document.getElementById('card');
+function build(){
+  STOPS=currentStops();
+  PTS=layout(STOPS,engine());
+  FP=flowParams();
+  ramp.innerHTML=STOPS.map(s=>`<div style="background:${s.hex}" title="${s.hex}"></div>`).join('');
+  card.style.borderRadius=S.radius+'px';
+  render(cv.width,cv.height);
+}
+const wrap=document.getElementById('wrap'), stage=document.getElementById('stage');
+const MAXCSS=2600;              /* ceiling on the backing store, not on the export */
+let viewW=0;                    /* what the card is actually showing, in CSS px */
+/* measured off the stage, never off the scrolling pane: a scrollbar appearing
+   at high zoom would otherwise shrink the fit and oscillate */
+function fitW(){
+  const aspect=S.outW/S.outH;
+  const aw=stage.clientWidth-88, ah=stage.clientHeight-88;
+  let w=Math.min(aw,760,S.outW);
+  if(w/aspect>ah) w=ah*aspect;
+  return Math.max(w,40);
+}
+function resize(){
+  const aspect=S.outW/S.outH, f=fitW();
+  const cap=Math.min(MAXCSS,MAXCSS*aspect);   /* caps the long side either way */
+  const w=clamp(f*S.zoom,40,cap);
+  S.zoom=w/f;                                 /* absorb the clamp so scrolling at
+                                                 the limit cannot bank up */
+  const h=w/aspect;
+  card.style.width=Math.round(w)+'px'; card.style.height=Math.round(h)+'px';
+  /* deep zoom on a modest GPU would ask for a buffer it cannot allocate, so the
+     pixel ratio gives way before the limit does — soft beats blank */
+  const dpr=Math.min(window.devicePixelRatio||1,2,MAXBUF/Math.max(w,h));
+  cv.width=Math.round(w*dpr); cv.height=Math.round(h*dpr);
+  viewW=w;
+  paintSize(); build();
+  wrap.classList.toggle('pannable',
+    wrap.scrollWidth>wrap.clientWidth+1 || wrap.scrollHeight>wrap.clientHeight+1);
+}
+new ResizeObserver(resize).observe(stage);
+
+/* wheel anywhere over the stage zooms, anchored on the pointer: whatever is
+   under the cursor stays under it, so zooming never undoes a pan */
+wrap.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const r=wrap.getBoundingClientRect(), px=e.clientX-r.left, py=e.clientY-r.top;
+  const fx=(wrap.scrollLeft+px)/Math.max(wrap.scrollWidth,1);
+  const fy=(wrap.scrollTop +py)/Math.max(wrap.scrollHeight,1);
+  const d=e.deltaY*(e.deltaMode===1?16:e.deltaMode===2?100:1);
+  S.zoom=clamp(S.zoom*Math.exp(-d*0.0016),0.001,1000);
+  resize();
+  wrap.scrollLeft=fx*wrap.scrollWidth-px;   /* clamps itself back to 0 when it fits */
+  wrap.scrollTop =fy*wrap.scrollHeight-py;
+},{passive:false});
+
+/* drag to shift the view once the card outgrows the pane. Editable overlay text
+   and controls keep their own pointer behaviour. */
+let pan=null;
+wrap.addEventListener('pointerdown',e=>{
+  if(!wrap.classList.contains('pannable')) return;
+  if(e.target.closest('[contenteditable],button,input')) return;
+  pan={x:e.clientX,y:e.clientY,l:wrap.scrollLeft,t:wrap.scrollTop};
+  wrap.classList.add('grabbing');
+  try{ wrap.setPointerCapture(e.pointerId); }catch(x){}
+  e.preventDefault();
+});
+wrap.addEventListener('pointermove',e=>{
+  if(!pan) return;
+  wrap.scrollLeft=pan.l-(e.clientX-pan.x);
+  wrap.scrollTop =pan.t-(e.clientY-pan.y);
+});
+const endPan=e=>{
+  if(!pan) return;
+  pan=null; wrap.classList.remove('grabbing');
+  try{ wrap.releasePointerCapture(e.pointerId); }catch(x){}
+};
+wrap.addEventListener('pointerup',endPan);
+wrap.addEventListener('pointercancel',endPan);
+/* click fits, double-click goes to 1:1 with the exported pixels. The single
+   click is held back a beat so a double never flashes through fit on its way. */
+let zTap;
+zoomLab.addEventListener('click',()=>{
+  clearTimeout(zTap);
+  zTap=setTimeout(()=>{ S.zoom=1; resize(); },180);
+});
+zoomLab.addEventListener('dblclick',()=>{
+  clearTimeout(zTap);
+  S.zoom=S.outW/fitW();          /* resize() clamps this if the card won't fit */
+  resize();
+});
+
+/* ══════════════════════════════════════════════════════════════
+   EXPORT
+   ══════════════════════════════════════════════════════════════ */
+function toast(msg,action){
+  const t=document.getElementById('toast');
+  t.innerHTML=msg; t.classList.add('on'); t.classList.toggle('act',!!action);
+  t.onclick=action?()=>{ t.classList.remove('on'); action(); }:null;
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),action?3200:1600);
+}
+document.getElementById('dlPng').addEventListener('click',()=>{
+  const w=S.outW, h=S.outH, ow=cv.width, oh=cv.height;
+  cv.width=w; cv.height=h; render(w,h);
+  cv.toBlob(bl=>{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(bl);
+    a.download=`${S.style==='flow'?'flow':'gradient'}-${STOPS[0].hex.slice(1).toLowerCase()}-${S.seed}-${w}x${h}.png`;
+    a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+    cv.width=ow; cv.height=oh; render(ow,oh);
+    toast(`PNG ${w}×${h} saved`);
+  },'image/png');
+});
+document.getElementById('copyCss').addEventListener('click',()=>{
+  /* first layer paints on top in CSS, so reverse: the highlight sits over the field */
+  const layers=PTS.slice().reverse().map(p=>{
+    const r=Math.round(p.sig*185*(p.gain>1?0.75:1));
+    const c=lch2hex(p.lch.L,p.lch.C,p.lch.H).hex;
+    return `  radial-gradient(${r}% ${r}% at ${(p.x*100).toFixed(1)}% ${(p.y*100).toFixed(1)}%, ${c} 0%, ${c}00 76%)`;
+  });
+  const css=`background-color: ${STOPS[Math.floor(STOPS.length/2)].hex};\nbackground-image:\n${layers.join(',\n')};`;
+  navigator.clipboard.writeText(css).then(()=>toast('CSS copied — approximate, no grain'),()=>toast('Copy blocked'));
+});
+/* a live snippet: one div, one canvas, one script. It draws with the same
+   three functions the studio uses, sizes itself to its box, pauses off-screen
+   and holds a still frame for anyone who asks for reduced motion. */
+function embedCode(){
+  const P={...FP}, fallback=`linear-gradient(${S.direction}deg,${[0,1,2,3,4].map(i=>rgb2hex(P.c.slice(i*3,i*3+3))).join(',')})`;
+  const js=`(function(){
+var box=document.currentScript.parentNode,cv=box.querySelector('canvas');
+var g=cv.getContext('webgl',{antialias:false,alpha:false});
+if(!g){box.style.background=${JSON.stringify(fallback)};return;}
+var P=${JSON.stringify(P)};
+var VS=${JSON.stringify(VS)};
+var FS=${JSON.stringify(FLOW_FS)};
+${flowProgram.toString()}
+${flowQuad.toString()}
+${flowDraw.toString()}
+var F=flowProgram(g,VS,FS);flowQuad(g);
+var t=${ftime.toFixed(3)},clock=0,last=0,raf=0,seen=true,d=1;
+var still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function size(){var r=box.getBoundingClientRect();d=Math.min(window.devicePixelRatio||1,2);
+  cv.width=Math.max(2,Math.round(r.width*d));cv.height=Math.max(2,Math.round(r.height*d));}
+function draw(){flowDraw(g,F,cv.width,cv.height,P,t,1/d,Math.floor(clock*24));}
+function loop(now){raf=0;if(!seen||still||document.hidden)return;var dt=Math.min(.05,(now-last)/1000);last=now;
+  t+=dt*P.speed;clock+=dt;draw();raf=requestAnimationFrame(loop);}
+function go(){if(!raf&&seen&&!still&&!document.hidden){last=performance.now();raf=requestAnimationFrame(loop);}}
+new ResizeObserver(function(){size();draw();}).observe(box);
+new IntersectionObserver(function(e){seen=e[0].isIntersecting;go();}).observe(box);
+document.addEventListener('visibilitychange',go);
+})();`;
+  return `<!-- Gradient Studio · Flow texture (live WebGL, pauses off-screen) -->
+<div style="position:relative;width:100%;aspect-ratio:${S.outW} / ${S.outH};border-radius:${S.radius}px;overflow:hidden;background:${fallback}">
+<canvas aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;display:block"></canvas>
+<script>${js}<\/script>
+</div>`;
+}
+document.getElementById('copyCode').addEventListener('click',()=>{
+  navigator.clipboard.writeText(embedCode()).then(()=>toast('Code copied — paste it into any page'),()=>toast('Copy blocked'));
+});
+
+let vidLen=10, recording=false;
+document.getElementById('lenSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  vidLen=+b.dataset.v;
+  document.querySelectorAll('#lenSeg button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+});
+/* MediaRecorder records in real time, so the clip plays out on a second,
+   hidden canvas at video size while the preview carries on. MP4 where the
+   browser can encode it, WebM otherwise. */
+const dlVideo=document.getElementById('dlVideo');
+dlVideo.addEventListener('click',async()=>{
+  if(recording) return;
+  if(!window.MediaRecorder) return toast('This browser cannot record video');
+  const mime=['video/mp4;codecs=avc1.640028','video/mp4;codecs=avc1','video/mp4',
+    'video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(m=>MediaRecorder.isTypeSupported(m));
+  if(!mime) return toast('This browser cannot record video');
+  const ext=mime.startsWith('video/mp4')?'mp4':'webm';
+  /* long side capped at 1920 and both sides even — what H.264 encoders accept */
+  const k=Math.min(1,1920/Math.max(S.outW,S.outH));
+  const w=Math.max(2,Math.round(S.outW*k/2)*2), h=Math.max(2,Math.round(S.outH*k/2)*2);
+  const ex=document.createElement('canvas'); ex.width=w; ex.height=h;
+  ex.style.cssText='position:fixed;left:-10000px;top:0;width:8px;height:8px;opacity:0;pointer-events:none';
+  document.body.appendChild(ex);
+  const g=ex.getContext('webgl',{antialias:false,alpha:false,preserveDrawingBuffer:true});
+  const F=flowProgram(g,VS,FLOW_FS); flowQuad(g);
+  const rec=new MediaRecorder(ex.captureStream(30),{mimeType:mime,videoBitsPerSecond:24e6});
+  const chunks=[]; rec.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+  const stopped=new Promise(r=>rec.onstop=r);
+  recording=true; dlVideo.disabled=true;
+  let t=ftime, clock=0;
+  const start=performance.now(); let last=start;
+  flowDraw(g,F,w,h,FP,t,S.outH/h,0);
+  rec.start();
+  await new Promise(done=>{
+    const step=now=>{
+      const el=(now-start)/1000, dt=Math.min(0.05,(now-last)/1000); last=now;
+      t+=dt*S.speed; clock+=dt;
+      flowDraw(g,F,w,h,FP,t,S.outH/h,Math.floor(clock*24));
+      dlVideo.textContent=`Recording… ${Math.max(1,Math.ceil(vidLen-el))}s`;
+      if(el>=vidLen+0.25) return done();   /* the recorder takes a beat to start */
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+  rec.stop(); await stopped;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(chunks,{type:mime}));
+  a.download=`flow-${STOPS[0].hex.slice(1).toLowerCase()}-${S.seed}-${w}x${h}-${vidLen}s.${ext}`;
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),8000);
+  const lose=g.getExtension('WEBGL_lose_context'); if(lose) lose.loseContext();
+  ex.remove();
+  recording=false; dlVideo.disabled=false; dlVideo.textContent='Download video';
+  toast(`${ext.toUpperCase()} ${w}×${h} saved`);
+});
+
+document.getElementById('copyHex').addEventListener('click',()=>{
+  navigator.clipboard.writeText(STOPS.map(s=>s.hex).join('\n')).then(()=>toast('Colours copied'),()=>toast('Copy blocked'));
+});
+addEventListener('keydown',e=>{
+  if(e.target.matches('input,[contenteditable]')) return;
+  if(e.key==='r'||e.key==='R') document.getElementById('shuffle').click();
+  if(e.key===' '&&S.style==='flow'&&!e.target.closest('button')){ e.preventDefault(); playing=!playing; syncPlay(); }
+});
+
+/* boot */
+syncMode(); syncStyle(); syncGrainSeg(); renderTiles(); paintDial(); renderAspects(); resize();
+</script>
+</body>
+</html>
