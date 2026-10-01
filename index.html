@@ -3,9 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gradient Studio v5</title>
+<title>Gradient Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap" rel="stylesheet">
 <style>
-@font-face { font-family: "Geist Mono"; src: url("fonts/geist-mono-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-style: normal; font-display: swap; }
 
 :root{
   --bg:#060606; --panel:#0C0C0C; --panel-2:#111; --line:#1C1C1C; --line-2:#262626;
@@ -76,6 +78,8 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
 }
 .iconbtn:hover{color:var(--ink);background:var(--hover)}
 .iconbtn svg{width:15px;height:15px}
+.grp-r{display:flex;align-items:center;gap:8px}
+.seedval{font-family:var(--mono);font-size:10.5px;letter-spacing:0;text-transform:none;color:var(--ink-3);font-variant-numeric:tabular-nums;user-select:text;-webkit-user-select:text;cursor:text}
 
 /* ── segmented ── */
 .seg{display:flex;background:var(--sunk);border:1px solid var(--line);border-radius:9px;padding:2px;gap:2px}
@@ -113,11 +117,8 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
    further in from the edge and carries less contrast than the one in the rail */
 .tile .chev{opacity:.38;margin-right:6px}
 .tile:hover .chev{opacity:.62}
-.advhead:hover .chev{opacity:.9}
-.tilewrap.open .chev span:nth-child(1),
-.advhead[aria-expanded="true"] .chev span:nth-child(1){transform:translateX(-3px) rotate(0deg)}
-.tilewrap.open .chev span:nth-child(2),
-.advhead[aria-expanded="true"] .chev span:nth-child(2){transform:translateX(3px) rotate(0deg)}
+.tilewrap.open .chev span:nth-child(1){transform:translateX(-3px) rotate(0deg)}
+.tilewrap.open .chev span:nth-child(2){transform:translateX(3px) rotate(0deg)}
 .tile .kill{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:15px;line-height:1;opacity:0;transition:.14s;background:rgba(0,0,0,.14)}
 .tile:hover .kill{opacity:.55}
 .tile .kill:hover{opacity:1;background:rgba(0,0,0,.3)}
@@ -213,15 +214,6 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
 .btn.primary{background:var(--seg-on);color:var(--ink);border-color:transparent}
 .btn.primary:hover{background:var(--line-2)}
 
-.advhead{display:flex;align-items:center;justify-content:space-between;width:100%;
-  font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
-.advhead:hover{color:var(--ink-2)}
-.advhead .chev{margin:-6px -3px -6px 0}
-
-.seedrow{display:flex;gap:6px;margin-top:16px;align-items:center}
-.seedbox{flex:1;height:30px;border:1px solid var(--line);background:var(--sunk);border-radius:8px;display:flex;align-items:center;padding:0 10px;gap:8px}
-.seedbox label{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--ink-3)}
-.seedbox input{font-family:var(--mono);font-size:11px;width:100%;min-width:0;font-variant-numeric:tabular-nums}
 .exportgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
 
 /* ── stage ── */
@@ -306,6 +298,13 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
   letter-spacing:.06em;text-transform:uppercase;padding:9px 15px;border-radius:9px;opacity:0;
   pointer-events:none;transition:.22s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.3)}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+/* a toast that carries an action (Undo) takes the pointer while it is up */
+.toast.act.on{pointer-events:auto;cursor:pointer}
+.toast u{text-underline-offset:2px}
+.presets{margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr)}
+.presets button{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn[disabled]{opacity:.6;cursor:default;pointer-events:none}
+#playBtn svg{width:13px;height:13px}
 </style>
 </head>
 <body>
@@ -323,6 +322,17 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
     <div class="rail-body">
 
       <section class="grp">
+        <div class="grp-h"><span>Style</span></div>
+        <div class="seg" id="styleSeg">
+          <button data-v="soft" aria-pressed="true">Soft</button>
+          <button data-v="flow" aria-pressed="false">Flow</button>
+          <button data-v="sky" aria-pressed="false">Sky</button>
+        </div>
+        <div class="seg mono presets" id="presetRow"></div>
+        <div class="hint" id="styleHint"></div>
+      </section>
+
+      <section class="grp">
         <div class="grp-h"><span>Colour</span></div>
         <div class="seg" id="modeSeg">
           <button data-v="single"   aria-pressed="true">One</button>
@@ -337,14 +347,14 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
       <section class="grp">
         <div class="grp-h">
           <span>Look</span>
-          <button class="iconbtn" id="shuffle"
-            title="Shuffle — randomises the direction angle and the advanced arrangement settings only (scatter, highlight, distortion, seed). Your colours, depth, softness and grain are left alone. — R"
-            aria-label="Shuffle direction and advanced arrangement settings">
+          <div class="grp-r"><span class="seedval" id="seedVal" title="Seed"></span><button class="iconbtn" id="shuffle"
+            title="Shuffle — randomises the direction angle and the arrangement (seed; scatter, highlight, distortion in Soft). Your colours, depth, softness and grain are left alone. — R"
+            aria-label="Shuffle direction and arrangement">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
               <path d="M2 4h2.6l5.8 8H14"/><path d="M2 12h2.6l5.8-8H14"/>
               <path d="M12 2.2 13.8 4 12 5.8"/><path d="M12 10.2 13.8 12 12 13.8"/>
             </svg>
-          </button>
+          </button></div>
         </div>
         <div class="dialrow">
           <div class="dial" id="dial" tabindex="0" role="slider" aria-label="Direction" aria-valuemin="0" aria-valuemax="359"><div class="ind"></div></div>
@@ -355,6 +365,7 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
             </div>
           </div>
         </div>
+        <div id="ctlFlow"></div>
         <div id="ctlLook"></div>
         <div class="seg mono" id="grainSeg" style="margin-top:9px">
           <button data-v="0" aria-pressed="true">Fine</button>
@@ -363,6 +374,15 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
           <button data-v="3" aria-pressed="false">Speckle</button>
         </div>
         <div id="ctlGrain"></div>
+        <div id="ctlHatch"></div>
+      </section>
+
+      <section class="grp off" id="motionGrp">
+        <div class="grp-h">
+          <span>Motion</span>
+          <button class="iconbtn" id="playBtn" title="Pause — Space" aria-label="Pause"></button>
+        </div>
+        <div id="ctlMotion"></div>
       </section>
 
       <section class="grp">
@@ -371,24 +391,22 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
         <div id="ctlFmt"></div>
       </section>
 
-      <section class="grp">
-        <button class="advhead" id="advToggle" aria-expanded="false"><span>Advanced</span>
-          <span class="chev"><span></span><span></span></span>
-        </button>
-        <div id="adv" class="off" style="margin-top:4px">
-          <div id="ctlAdvMix"></div>
-          <div id="ctlAdvSingle"></div>
-          <div id="ctlAdvComp"></div>
-          <div class="seedrow"><div class="seedbox"><label>SEED</label><input id="seed" type="text" inputmode="numeric"></div></div>
-        </div>
-      </section>
-
       <section class="grp" style="border-bottom:none">
         <div class="grp-h"><span>Export</span></div>
         <button class="btn full primary" id="dlPng">Download PNG</button>
         <div class="exportgrid">
           <button class="btn mono" id="copyCss">Copy CSS</button>
+          <button class="btn mono off" id="copyCode">Copy code</button>
           <button class="btn mono" id="copyHex">Copy colours</button>
+        </div>
+        <div class="off" id="videoRow">
+          <div class="seg mono" id="lenSeg" style="margin-top:12px">
+            <button data-v="5"  aria-pressed="false">5s</button>
+            <button data-v="10" aria-pressed="true">10s</button>
+            <button data-v="20" aria-pressed="false">20s</button>
+          </div>
+          <button class="btn full" id="dlVideo" style="margin-top:6px">Download video</button>
+          <div class="hint">Copy code gives a live, moving version for any website. Video saves the motion as MP4, or WebM where MP4 isn't available.</div>
         </div>
       </section>
 
@@ -555,6 +573,18 @@ function layout(stops,o){
    WEBGL
    ══════════════════════════════════════════════════════════════ */
 const MAXP=12;
+/* hatch: fine parallel hairlines in EXPORTED pixels, like the grain. When the
+   preview is minified one fragment spans several export pixels, so the line
+   edge widens with the footprint instead of aliasing into moire. */
+const HATCH_GLSL=`
+float hatchLine(){
+  float a=radians(uHatchAngle);
+  vec2 hp=gl_FragCoord.xy*uOutScale;
+  float x=cos(a)*hp.x+sin(a)*hp.y;
+  float d=abs(fract(x/uHatchGap)-0.5)*uHatchGap;
+  float w=max(uOutScale,1.0);
+  return 1.0-smoothstep(0.55-0.35*w,0.55+0.35*w,d);
+}`;
 const VS=`attribute vec2 p;varying vec2 vUv;void main(){vUv=p*0.5+0.5;gl_Position=vec4(p,0.,1.);}`;
 const FS=`
 precision highp float;
@@ -566,6 +596,8 @@ uniform float uGain[${MAXP}];
 uniform int   uCount;
 uniform float uAspect,uPreserve,uWarp,uFall,uSeed,uGrain;
 uniform float uGrainSize,uGrainType,uOutScale,uSuper;
+uniform float uHatch,uHatchGap,uHatchAngle;
+${HATCH_GLSL}
 
 float hash21(vec2 p){ p=fract(p*vec2(123.34,456.21)); p+=dot(p,p+45.32); return fract(p.x*p.y); }
 /* the old hash multiplied x by y, which lays faint diagonals through the field
@@ -663,6 +695,10 @@ void main(){
     lin=oklab2lin(vec3(L,ab*lo));
   }
   vec3 col=lin2srgb(lin);
+  if(uHatch>0.0001){                   /* hairlines in soft patches, not everywhere */
+    float spots=smoothstep(0.42,0.62,vnoise(uv*2.2+vec2(3.1,7.4)+uSeed)*0.65+vnoise(uv*4.7+vec2(1.3,2.9)+uSeed)*0.35);
+    col=mix(col,vec3(1.0),hatchLine()*spots*uHatch*0.6);
+  }
   if(uGrain>0.0001){
     /* grain is measured in EXPORTED pixels, not preview pixels: a 1px grain is
        one pixel of the saved PNG no matter what the card is showing */
@@ -688,6 +724,149 @@ void main(){
   gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
 }`;
 
+/* ══════════════════════════════════════════════════════════════
+   FLOW — moving silk, folded from the Superhuman texture study
+   (34_DESIGNSYSTEMS/superhuman/shader). Two-pass domain warp over fbm,
+   a five-stop ramp dark → light, sheen ridges where the field folds.
+   Grain and hatch are the studio's own, measured in exported pixels.
+   ══════════════════════════════════════════════════════════════ */
+const FLOW_FS=`
+precision highp float;
+uniform vec2  uRes;
+uniform float uTime,uSeed,uOutScale,uSuper,uGrainSeed;
+uniform vec3  uC[7];
+uniform vec3  uHi;
+uniform float uScale,uWarp,uStretch,uAngle,uDetail,uContrast,uSheen,uFolds;
+uniform float uHatch,uHatchGap,uHatchAngle,uBand;
+uniform float uGrain,uGrainType,uGrainSize;
+
+vec2 h2(vec2 p){ p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))); return -1.0+2.0*fract(sin(p)*43758.5453123); }
+float noise(vec2 p){                  /* gradient noise, quintic fade */
+  vec2 i=floor(p),f=fract(p),u=f*f*f*(f*(f*6.0-15.0)+10.0);
+  return mix(mix(dot(h2(i),f),dot(h2(i+vec2(1,0)),f-vec2(1,0)),u.x),
+             mix(dot(h2(i+vec2(0,1)),f-vec2(0,1)),dot(h2(i+vec2(1,1)),f-vec2(1,1)),u.x),u.y);
+}
+float fbm(vec2 p){                    /* fractional octave count = soft Detail slider */
+  float a=0.5,s=0.0,n=0.0;
+  mat2 m=mat2(1.6,1.2,-1.2,1.6);
+  for(int i=0;i<6;i++){
+    float w=clamp(uDetail-float(i),0.0,1.0);
+    s+=a*w*noise(p); n+=a*w; p=m*p; a*=0.5;
+  }
+  return s/max(n,1e-3);
+}
+vec3 ramp(float t){
+  t=clamp(t,0.0,1.0)*6.0;
+  vec3 c=uC[0];
+  for(int i=1;i<7;i++) c=mix(c,uC[i],smoothstep(float(i-1),float(i),t));
+  return c;
+}
+mat2 rot(float a){ float c=cos(a),s=sin(a); return mat2(c,-s,s,c); }
+float hash13(vec3 p3){ p3=fract(p3*0.1031); p3+=dot(p3,p3.zyx+31.32); return fract((p3.x+p3.y)*p3.z); }
+float gcell(vec2 p,float ch){
+  float s=ch+uGrainSeed*7.31;
+  return (hash13(vec3(p,s))+hash13(vec3(p,s+19.7))+hash13(vec3(p,s+53.3))-1.5)*0.5774;
+}
+float gsmooth(vec2 p,float ch){
+  vec2 i=floor(p),f=fract(p),u=f*f*(3.0-2.0*f);
+  return mix(mix(gcell(i,ch),gcell(i+vec2(1,0),ch),u.x),mix(gcell(i+vec2(0,1),ch),gcell(i+vec2(1,1),ch),u.x),u.y)*1.72;
+}
+float gsample(vec2 opx,float ch){
+  float sz=max(uGrainSize,0.001);
+  if(sz<1.0) return gcell(floor(opx),ch)*sz;
+  vec2 p=opx/sz;
+  return mix(gcell(floor(p),ch),gsmooth(p,ch),smoothstep(1.0,1.6,sz));
+}
+float grainAt(vec2 opx,float ch){
+  if(uSuper>0.5){
+    float o=uOutScale*0.25;
+    return (gsample(opx+vec2(-o,-o),ch)+gsample(opx+vec2(o,-o),ch)+gsample(opx+vec2(-o,o),ch)+gsample(opx+vec2(o,o),ch))*0.25;
+  }
+  return gsample(opx,ch);
+}
+${HATCH_GLSL}
+
+void main(){
+  vec2 p=(gl_FragCoord.xy-0.5*uRes)/uRes.y;   /* height-relative, so preview = export */
+  float t=uTime;
+  /* rotate, then stretch along one axis: long silky streaks */
+  vec2 q=rot(radians(uAngle))*p;
+  q.x/=uStretch;
+  q=q*uScale*2.0+uSeed;
+  /* two-pass domain warp — flowing, folded fabric of colour */
+  vec2 w1=vec2(fbm(q+vec2(0.0,0.11*t)),fbm(q+vec2(5.2,1.3)-0.08*t));
+  vec2 w2=vec2(fbm(q+uWarp*w1+vec2(1.7,9.2)+0.05*t),fbm(q+uWarp*w1+vec2(8.3,2.8)-0.06*t));
+  float f=fbm(q+uWarp*w2)*0.5+0.5;
+  f=clamp((f-0.5)*uContrast*1.6+0.5,0.0,1.0);
+  /* sky: the ramp runs down the frame in order, and the warped field only
+     nudges it — wide banded sky with soft wavy seams */
+  if(uBand>0.5){ float along=-(rot(radians(uAngle))*p).y; f=clamp(0.5+along*1.04+(f-0.5)*0.42,0.0,1.0); }
+  vec3 col=ramp(f);
+  /* sheen: thin bright ridges where the warped field folds over itself */
+  float ridge=abs(sin(3.14159*(f*uFolds+length(w2)*0.9)));
+  float sh=pow(1.0-ridge,8.0)*smoothstep(0.25,0.75,f);
+  col=mix(col,uHi,sh*uSheen);
+  /* iridescent drift: a tiny hue lean along the warp keeps flat areas alive */
+  col+=(vec3(0.02,-0.01,0.03)*w1.x+vec3(-0.02,0.015,0.01)*w2.y)*0.8;
+  if(uHatch>0.0001){
+    float spots=smoothstep(0.42,0.62,fbm(p*1.1+vec2(3.1,7.4)+0.02*t+uSeed)*0.5+0.5);
+    col=mix(col,vec3(1.0),hatchLine()*spots*uHatch*0.6);
+  }
+  col=clamp(col,0.0,1.0);
+  if(uGrain>0.0001){
+    vec2 opx=gl_FragCoord.xy*uOutScale;
+    vec3 g;
+    if(uGrainType<0.5){ g=vec3(grainAt(opx,0.0)); }
+    else if(uGrainType<1.5){ g=vec3(grainAt(opx,0.0),grainAt(opx,71.0),grainAt(opx,137.0)); }
+    else if(uGrainType<2.5){
+      float fg=grainAt(opx,0.0)*0.74+grainAt(opx*2.31,29.0)*0.26;
+      float lum=dot(col,vec3(0.2126,0.7152,0.0722));
+      g=vec3(fg*mix(0.30,1.0,clamp(4.0*lum*(1.0-lum),0.0,1.0)));
+    }else{
+      float s=grainAt(opx,0.0);
+      g=vec3(sign(s)*smoothstep(0.34,0.78,abs(s))*2.1);
+    }
+    col+=g*uGrain;
+  }
+  col+=(hash13(vec3(gl_FragCoord.xy,uSeed))-0.5)/255.0;   /* kill 8-bit banding */
+  gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
+}`;
+/* These three functions are written to stand alone — no outside variables —
+   because Copy code pastes their source straight into the snippet. The app and
+   the embed therefore draw with literally the same code. */
+function flowProgram(g,vs,fs){
+  function sh(t,src){var s=g.createShader(t);g.shaderSource(s,src);g.compileShader(s);
+    if(!g.getShaderParameter(s,g.COMPILE_STATUS))throw new Error(g.getShaderInfoLog(s));return s;}
+  var p=g.createProgram();
+  g.attachShader(p,sh(g.VERTEX_SHADER,vs)); g.attachShader(p,sh(g.FRAGMENT_SHADER,fs));
+  g.bindAttribLocation(p,0,'p'); g.linkProgram(p);
+  var L={},names=['uRes','uTime','uSeed','uOutScale','uSuper','uGrainSeed','uHi','uScale','uWarp','uStretch',
+    'uAngle','uDetail','uContrast','uSheen','uFolds','uHatch','uHatchGap','uHatchAngle','uGrain','uGrainType','uGrainSize','uBand'];
+  for(var i=0;i<names.length;i++) L[names[i]]=g.getUniformLocation(p,names[i]);
+  L.uC=g.getUniformLocation(p,'uC[0]');
+  return {p:p,L:L};
+}
+function flowQuad(g){
+  g.bindBuffer(g.ARRAY_BUFFER,g.createBuffer());
+  g.bufferData(g.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),g.STATIC_DRAW);
+  g.enableVertexAttribArray(0); g.vertexAttribPointer(0,2,g.FLOAT,false,0,0);
+}
+/* os = exported pixels per drawn pixel (grain + hatch sizes); tick re-rolls the
+   grain while it moves, so it reads as film rather than a dirty screen */
+function flowDraw(g,F,w,h,P,t,os,tick){
+  var L=F.L; g.useProgram(F.p); g.viewport(0,0,w,h);
+  g.uniform2f(L.uRes,w,h); g.uniform1f(L.uTime,t); g.uniform1f(L.uSeed,P.seed);
+  g.uniform1f(L.uOutScale,os); g.uniform1f(L.uSuper,os>1.15?1:0);
+  g.uniform1f(L.uGrainSeed,P.seed*3.1+(tick%997)*1.618);
+  g.uniform3fv(L.uC,P.c); g.uniform3fv(L.uHi,P.hi);
+  g.uniform1f(L.uScale,P.scale); g.uniform1f(L.uWarp,P.warp); g.uniform1f(L.uStretch,P.stretch);
+  g.uniform1f(L.uAngle,P.angle); g.uniform1f(L.uDetail,P.detail); g.uniform1f(L.uContrast,P.contrast);
+  g.uniform1f(L.uSheen,P.sheen); g.uniform1f(L.uFolds,P.folds); g.uniform1f(L.uBand,P.band||0);
+  g.uniform1f(L.uHatch,P.hatch); g.uniform1f(L.uHatchGap,P.hatchGap); g.uniform1f(L.uHatchAngle,P.hatchAngle);
+  g.uniform1f(L.uGrain,P.grain); g.uniform1f(L.uGrainType,P.grainType); g.uniform1f(L.uGrainSize,P.grainSize);
+  g.drawArrays(g.TRIANGLES,0,3);
+}
+
 const cv=document.getElementById('gl');
 const gl=cv.getContext('webgl',{preserveDrawingBuffer:true,antialias:false,alpha:false});
 let U={};
@@ -697,15 +876,17 @@ let U={};
   const prog=gl.createProgram();
   gl.attachShader(prog,sh(gl.VERTEX_SHADER,VS));
   gl.attachShader(prog,sh(gl.FRAGMENT_SHADER,FS));
-  gl.linkProgram(prog); gl.useProgram(prog);
+  gl.bindAttribLocation(prog,0,'p');          /* both programs read the quad from slot 0 */
+  gl.linkProgram(prog); gl.useProgram(prog); U.prog=prog;
   gl.bindBuffer(gl.ARRAY_BUFFER,gl.createBuffer());
   gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
-  const loc=gl.getAttribLocation(prog,'p');
+  const loc=0;
   gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
   ['uLab','uPos','uSig','uGain'].forEach(n=>U[n]=gl.getUniformLocation(prog,n+'[0]'));
   ['uCount','uAspect','uPreserve','uWarp','uFall','uSeed','uGrain',
-   'uGrainSize','uGrainType','uOutScale','uSuper'].forEach(n=>U[n]=gl.getUniformLocation(prog,n));
+   'uGrainSize','uGrainType','uOutScale','uSuper','uHatch','uHatchGap','uHatchAngle'].forEach(n=>U[n]=gl.getUniformLocation(prog,n));
 })();
+const FLOW=flowProgram(gl,VS,FLOW_FS);
 /* what this device can actually draw into — 16384 on desktop, 4096 on plenty
    of older and mobile GPUs */
 const MAXBUF=Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE),gl.getParameter(gl.MAX_VIEWPORT_DIMS)[0]);
@@ -721,8 +902,60 @@ const DEFAULTS={
   outW:1600, outH:1600, radius:22, zoom:1,
   vivid:0.85, tones:5, hueShift:-10,
   scatter:0.8, warp:0.10, bloom:0.55,
-  grainType:0, grainSize:1
+  grainType:0, grainSize:1,
+  style:'soft',
+  /* flow */
+  scale:1.0, fwarp:1.9, stretch:2.4, detail:3.2, speed:0.3,
+  contrast:1.0, sheen:0.3, folds:2.0,
+  /* hatch — both styles */
+  hatch:0, hatchGap:7, hatchAngle:45
 };
+/* one set of presets per style.
+   Soft: candy 3D objects — coins, butterflies, gems, bubbles.
+   Flow: jewel tones, folded into silk dark → light.
+   Sky:  banded skies, colours listed top to bottom. */
+const SOFT={depth:.3,softness:.45,grain:.3,scatter:.8,bloom:.6,warp:.1};
+const SILK={scale:1.0,fwarp:1.9,stretch:2.4,angle:-20,detail:3.2,speed:.3,contrast:1.1,sheen:.35,folds:2.2,hatch:0,hatchGap:7,hatchAngle:45,grain:.03};
+const SKY ={scale:.7,fwarp:1.0,stretch:3.6,angle:0,detail:2.0,speed:.15,contrast:.9,sheen:.06,folds:1.2,hatch:0,hatchGap:7,hatchAngle:45,grain:.06};
+const PRESETS={
+  soft:{
+    Coin:     {...SOFT,c:['#FF4A12','#FF8A2A','#FFC46B'],direction:140},
+    Butterfly:{...SOFT,c:['#4B32D0','#8C6CF2','#3FC7C0'],direction:200},
+    Gem:      {...SOFT,c:['#A62CE6','#F06CC8','#FFB6E8'],direction:120},
+    Heart:    {...SOFT,c:['#FF8A3D','#FFB79A','#FF7FB0'],direction:160},
+    Bubble:   {...SOFT,c:['#8EDFF2','#C3B2FF','#FFC6E6','#FFF1BE'],direction:135,depth:.15,grain:.2},
+    Slime:    {...SOFT,c:['#16B23A','#8FE05C','#E6F577'],direction:150}
+  },
+  flow:{
+    Velvet:  {...SILK,c:['#1C260C','#3D5417','#6E7D22','#C9A93A','#FFE6A0']},
+    Ruby:    {...SILK,c:['#24030A','#6A0A16','#BE172A','#FF6A58','#FFD3C4'],angle:15},
+    Amethyst:{...SILK,c:['#120838','#3A1FA0','#6B3FE0','#B48CFF','#EADCFF'],angle:-35},
+    Gold:    {...SILK,c:['#352006','#87580F','#D7A01E','#FFD35E','#FFF4C8'],angle:25,sheen:.5},
+    Night:   {...SILK,c:['#14060A','#2B0E1C','#7A2E8A','#E07AC8','#FFC6E8']},
+    Holo:    {...SILK,c:['#3A6FD8','#8C9CF0','#E0A8F0','#A8F0E0','#F6F8FF'],contrast:.9,sheen:.45,stretch:3.2}
+  },
+  sky:{
+    Sneaker: {...SKY,c:['#00BD3E','#5FBA8D','#D2B5D6','#FEB2F7','#EED4A4','#E7D1DF']},
+    Clips:   {...SKY,c:['#C9C2C6','#C6AEF2','#B5A9F0','#C4D7A6','#B9E37A','#E8C98A'],fwarp:1.3},
+    Daydream:{...SKY,c:['#6CB8F8','#B7B4F7','#E7B4F6','#FABD8A','#FCC15B']},
+    Party:   {...SKY,c:['#4FC3E8','#C9A4F0','#FF9FD0','#FFD45A','#7EDB5E','#2DBE4A'],fwarp:1.2},
+    Bubblegum:{...SKY,c:['#9C7CF4','#D795EE','#FF9FCB','#FFC4A6','#FFE3B8']},
+    Wins:    {...SKY,c:['#1EC4B0','#6FA8F0','#FFC21A','#FF9A4A','#FF7FB0'],contrast:.8}
+  }
+};
+/* each style keeps its own look. Colours, format and content are shared, but
+   switching style never carries one style's sliders into another — Flow looks
+   the same whether you arrive from Soft or from Sky */
+const LOOK_KEYS=['direction','seed','depth','softness','grain','grainType','grainSize','scatter','warp','bloom',
+  'vivid','tones','hueShift','scale','fwarp','stretch','detail','speed','contrast','sheen','folds','hatch','hatchGap','hatchAngle'];
+const STYLE_LOOK={
+  soft:{},
+  flow:{},
+  sky:{direction:0,scale:SKY.scale,fwarp:SKY.fwarp,stretch:SKY.stretch,detail:SKY.detail,speed:SKY.speed,
+       contrast:SKY.contrast,sheen:SKY.sheen,folds:SKY.folds,grain:Math.round(SKY.grain*455)/100}
+};
+const pickLook=o=>Object.fromEntries(LOOK_KEYS.map(k=>[k,o[k]]));
+DEFAULTS.bank=Object.fromEntries(Object.keys(STYLE_LOOK).map(st=>[st,pickLook({...DEFAULTS,...STYLE_LOOK[st]})]));
 let S=structuredClone(DEFAULTS), STOPS=[], PTS=[];
 const spreadOf  = s => 0.30+0.78*s;
 const falloffOf = s => 2.30-1.62*s;
@@ -756,6 +989,21 @@ const SPECS={
     {k:'softness', l:'Softness', hint:'zones to wash',   min:0,max:1,step:.01,f:pc},
     {k:'grain',    l:'Grain',                            min:0,max:1,step:.01,f:pc}
   ],
+  ctlFlow:[
+    {k:'scale',    l:'Scale',                              min:.3,max:4,step:.01,f:v=>v.toFixed(2)+'×'},
+    {k:'stretch',  l:'Stretch',  hint:'long streaks',      min:1,max:6,step:.01,f:v=>v.toFixed(2)+'×'},
+    {k:'fwarp',    l:'Warp',     hint:'how folded',        min:0,max:4,step:.01,f:v=>v.toFixed(2)},
+    {k:'contrast', l:'Contrast',                           min:.5,max:2.2,step:.01,f:v=>v.toFixed(2)},
+    {k:'folds',    l:'Folds',                              min:.5,max:6,step:.01,f:v=>v.toFixed(2)},
+    {k:'detail',   l:'Detail',                             min:1,max:6,step:.01,f:v=>v.toFixed(2)},
+    {k:'sheen',    l:'Sheen',    hint:'shine on the folds', min:0,max:1,step:.01,f:pc}
+  ],
+  ctlHatch:[
+    {k:'hatch',    l:'Hatch',    hint:'fine lines in soft patches', min:0,max:1,step:.01,f:pc}
+  ],
+  ctlMotion:[
+    {k:'speed',    l:'Speed',                              min:0,max:1.5,step:.01,f:v=>v.toFixed(2)+'×'}
+  ],
   ctlGrain:[
     {k:'grainSize',l:'Grain size',hint:'in exported pixels', min:0.01,max:3,step:.01,
      f:v=>v.toFixed(2)+'px'}
@@ -763,18 +1011,6 @@ const SPECS={
   ctlFmt:[
     {k:'radius',   l:'Radius',                           min:0,max:90,step:1,f:v=>v+'px'}
   ],
-  ctlAdvMix:[
-    {k:'vivid',    l:'Vivid mix', hint:'no grey midpoints', min:0,max:1,step:.01,f:pc}
-  ],
-  ctlAdvSingle:[
-    {k:'tones',    l:'Tones',                            min:2,max:7,step:1,f:v=>v},
-    {k:'hueShift', l:'Hue shift', hint:'across the run',  min:-45,max:45,step:1,f:v=>(v>0?'+':'')+v+'°'}
-  ],
-  ctlAdvComp:[
-    {k:'scatter',  l:'Scatter',   hint:'0 = straight ramp', min:0,max:1.6,step:.01,f:v=>pc(v/1.6)},
-    {k:'bloom',    l:'Highlight', hint:'glow of lightest',  min:0,max:1.4,step:.01,f:v=>pc(v/1.4)},
-    {k:'warp',     l:'Distortion',                          min:0,max:0.4,step:.005,f:v=>pc(v/0.4)}
-  ]
 };
 const SLIDERS={};
 function makeSlider(sp,host){
@@ -1046,11 +1282,94 @@ function syncMode(){
   document.querySelectorAll('#modeSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===S.mode)));
   document.getElementById('addColor').classList.toggle('off',single);
   document.getElementById('ramp').classList.toggle('off',!single);
-  document.getElementById('ctlAdvSingle').classList.toggle('off',!single);
   document.getElementById('modeHint').textContent = single
     ? 'One colour becomes a run of tones in the same family — pale highlight through deep shadow.'
     : 'Your exact colours are kept. Depth adds light and shade without shifting the hues.';
 }
+/* ── style ── */
+const STYLE_HINT={
+  soft:'Soft blends your colours into a still, smooth field.',
+  flow:'Flow folds your colours into moving silk, dark to light.',
+  sky:'Sky lays your colours in soft drifting bands, first colour at the top.'
+};
+function syncStyle(){
+  const flow=S.style!=='soft';
+  document.querySelectorAll('#styleSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===S.style)));
+  document.getElementById('styleHint').textContent=STYLE_HINT[S.style];
+  renderPresets();
+  ['ctlFlow','motionGrp','copyCode','videoRow'].forEach(id=>document.getElementById(id).classList.toggle('off',!flow));
+  ['copyCss'].forEach(id=>document.getElementById(id).classList.toggle('off',flow));
+  SLIDERS.softness.classList.toggle('off',flow);
+  // Depth is shared: sits among the flow sliders (before Folds), or first in Look for soft
+  if(flow) SLIDERS.folds.parentNode.insertBefore(SLIDERS.depth,SLIDERS.folds); else SLIDERS.softness.parentNode.insertBefore(SLIDERS.depth,SLIDERS.softness);
+  syncPlay();
+}
+document.getElementById('styleSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b||b.dataset.v===S.style) return;
+  S.bank[S.style]=pickLook(S);
+  S.style=b.dataset.v;
+  Object.assign(S,S.bank[S.style]);
+  showSeed();
+  syncStyle(); syncGrainSeg(); paintDial();
+  Object.values(SLIDERS).forEach(s=>s._paint());
+  build();
+});
+const presetRow=document.getElementById('presetRow');
+/* a preset stays lit while the colours are still the ones it set */
+function syncPresets(){
+  const cur=S.colors.join();
+  presetRow.querySelectorAll('button').forEach(b=>{
+    const p=PRESETS[S.style][b.dataset.p];
+    b.setAttribute('aria-pressed',String(S.mode==='multi'&&p.c.join()===cur));
+  });
+}
+function renderPresets(){
+  presetRow.innerHTML=Object.keys(PRESETS[S.style]).map(n=>`<button data-p="${n}" aria-pressed="false" title="${n}">${n}</button>`).join('');
+  syncPresets();
+}
+presetRow.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  const p=PRESETS[S.style][b.dataset.p];
+  S.mode='multi'; S.colors=p.c.slice(); openIdx=-1;
+  if(S.style==='soft'){
+    ['depth','softness','grain','scatter','bloom','warp','direction'].forEach(k=>S[k]=p[k]);
+  }else{
+    S.depth=.2;
+    ['scale','fwarp','stretch','detail','speed','contrast','sheen','folds','hatch','hatchGap','hatchAngle'].forEach(k=>S[k]=p[k]);
+    S.direction=(p.angle+360)%360;
+    /* the study's grain was uniform ±g/2; the studio's is a bell of the same spread */
+    S.grain=snap(clamp(p.grain*4.55),.01);
+  }
+  S.grainType=0;
+  syncMode(); syncGrainSeg(); renderTiles(); paintDial();
+  Object.values(SLIDERS).forEach(s=>s._paint());
+  build();
+});
+
+/* ── motion ── */
+const ICON_PAUSE=`<svg viewBox="0 0 16 16" fill="currentColor"><rect x="4" y="3" width="2.6" height="10" rx="1"/><rect x="9.4" y="3" width="2.6" height="10" rx="1"/></svg>`;
+const ICON_PLAY=`<svg viewBox="0 0 16 16" fill="currentColor"><path d="M5 3.2v9.6c0 .5.5.8.9.5l7.2-4.8c.4-.3.4-.8 0-1L5.9 2.7c-.4-.3-.9 0-.9.5z"/></svg>`;
+const playBtn=document.getElementById('playBtn');
+let playing=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+let ftime=0, gclock=0, raf=0, lastT=0;
+const grainTick=()=>Math.floor(gclock*24);   /* grain re-rolls at film rate, not screen rate */
+function frame(now){
+  raf=0;
+  if(S.style==='soft'||!playing||document.hidden) return;
+  const dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
+  ftime+=dt*S.speed; gclock+=dt;
+  render(cv.width,cv.height);
+  raf=requestAnimationFrame(frame);
+}
+function syncPlay(){
+  playBtn.innerHTML=playing?ICON_PAUSE:ICON_PLAY;
+  playBtn.title=playing?'Pause — Space':'Play — Space';
+  playBtn.setAttribute('aria-label',playing?'Pause':'Play');
+  if(S.style!=='soft'&&playing&&!document.hidden&&!raf){ lastT=performance.now(); raf=requestAnimationFrame(frame); }
+}
+playBtn.addEventListener('click',()=>{ playing=!playing; syncPlay(); });
+document.addEventListener('visibilitychange',syncPlay);
+
 /* ── grain type ── */
 function syncGrainSeg(){
   document.querySelectorAll('#grainSeg button').forEach(b=>
@@ -1126,16 +1445,9 @@ sizeLab.addEventListener('dblclick',()=>{
   });
 });
 
-/* ── advanced / misc ── */
-const advToggle=document.getElementById('advToggle'), adv=document.getElementById('adv');
-advToggle.addEventListener('click',()=>{
-  const open=advToggle.getAttribute('aria-expanded')==='true';
-  advToggle.setAttribute('aria-expanded',String(!open));
-  adv.classList.toggle('off',open);
-});
-const seedEl=document.getElementById('seed');
-seedEl.value=S.seed;
-seedEl.addEventListener('input',e=>{ S.seed=parseInt(e.target.value.replace(/\D/g,'')||'0',10); build(); });
+/* ── seed / shuffle ── */
+const seedVal=document.getElementById('seedVal'), showSeed=()=>{ seedVal.textContent=S.seed; };
+showSeed();
 /* shuffle rolls the arrangement — everything that decides where the colours
    land, never what they are. Each value it touches owns a control in the rail,
    so every one of them is repainted: the panel never disagrees with the canvas. */
@@ -1144,14 +1456,14 @@ const snap=(v,step)=>Math.round(Math.round(v/step)*step*1e6)/1e6;
 document.getElementById('shuffle').addEventListener('click',()=>{
   S.seed=Math.floor(Math.random()*9999);
   S.direction=Math.round(rand(0,360))%360;
+  if(S.style!=='soft'){ showSeed(); paintDial(); build(); return; }
   /* mid-range rolls only — the extremes of these three are for hand-tuning,
      not for a button you press twenty times in a row */
   S.scatter=snap(rand(0.45,1.25),.01);
   S.bloom=snap(rand(0.25,1.00),.01);
   S.warp=snap(rand(0,0.22),.005);
-  seedEl.value=S.seed;
+  showSeed();
   paintDial();
-  ['scatter','bloom','warp'].forEach(k=>SLIDERS[k]._paint());
   build();
 });
 const overlay=document.getElementById('overlay');
@@ -1159,11 +1471,17 @@ document.getElementById('toggleContent').addEventListener('click',e=>{
   const on=!overlay.classList.toggle('off');
   e.currentTarget.setAttribute('aria-pressed',String(on));
 });
-document.getElementById('reset').addEventListener('click',()=>{
-  S=structuredClone(DEFAULTS); seedEl.value=S.seed; openIdx=-1;
-  syncMode(); syncGrainSeg(); renderTiles(); paintDial(); paintSize(); renderAspects();
+function applyState(next){
+  S=structuredClone(next); showSeed(); openIdx=-1;
+  syncMode(); syncStyle(); syncGrainSeg(); renderTiles(); paintDial(); paintSize(); renderAspects();
   Object.values(SLIDERS).forEach(s=>s._paint());
   resize();
+}
+/* no confirm: reset happens at once and the toast carries the way back */
+document.getElementById('reset').addEventListener('click',()=>{
+  const before=structuredClone(S);
+  applyState(DEFAULTS);
+  toast('Reset · <u>Undo</u>',()=>{ applyState(before); toast('Restored'); });
 });
 
 /* ══════════════════════════════════════════════════════════════
@@ -1178,7 +1496,30 @@ function currentStops(){
     ? buildFamily(lch[0],{tones:S.tones,range:0.10+S.depth*0.55,hueShift:S.hueShift})
     : buildPalette(lch.slice(0,MAXP-1),{depth:S.depth});
 }
+/* flow reads its ramp from the same stops as soft: sorted dark → light and
+   resampled to seven in Oklab, with a highlight lifted off the lightest.
+   Sky keeps the colours in the order given — first at the top */
+let FP=null;
+function flowParams(){
+  const sky=S.style==='sky';
+  const labs=STOPS.map(s=>[s.L,s.C*Math.cos(s.H*D),s.C*Math.sin(s.H*D)]);
+  if(!sky) labs.sort((a,b)=>a[0]-b[0]);
+  const m=labs.length, c=[];
+  const toRgb=([L,a,b])=>hex2rgb(lch2hex(L,Math.hypot(a,b),(Math.atan2(b,a)/D+360)%360).hex);
+  for(let i=0;i<7;i++){
+    const u=m===1?0:i/6*(m-1), k=Math.min(Math.floor(u),Math.max(m-2,0)), f=m===1?0:u-k;
+    const A=labs[k], B=labs[Math.min(k+1,m-1)];
+    c.push(...toRgb(A.map((v,j)=>v+(B[j]-v)*f)));
+  }
+  const top=sky?labs.reduce((a,b)=>b[0]>a[0]?b:a):labs[m-1];
+  const hi=toRgb([Math.min(0.985,top[0]+0.12),top[1]*0.6,top[2]*0.6]);
+  return {c,hi,band:sky?1:0,scale:S.scale,warp:S.fwarp,stretch:S.stretch,angle:S.direction,detail:S.detail,
+    contrast:S.contrast,sheen:S.sheen,folds:S.folds,hatch:S.hatch,hatchGap:S.hatchGap,hatchAngle:S.hatchAngle,
+    grain:S.grain*0.22,grainType:S.grainType,grainSize:S.grainSize,seed:(S.seed%1000)/10,speed:S.speed};
+}
 function render(w,h){
+  if(S.style!=='soft'){ flowDraw(gl,FLOW,w,h,FP,ftime,S.outH/Math.max(h,1),grainTick()); return; }
+  gl.useProgram(U.prog);
   gl.viewport(0,0,w,h);
   const n=Math.min(PTS.length,MAXP);
   const lab=new Float32Array(MAXP*3),pos=new Float32Array(MAXP*2),
@@ -1205,15 +1546,18 @@ function render(w,h){
   gl.uniform1f(U.uGrainType,S.grainType);
   gl.uniform1f(U.uOutScale,outScale);
   gl.uniform1f(U.uSuper,outScale>1.15?1:0);
+  gl.uniform1f(U.uHatch,S.hatch); gl.uniform1f(U.uHatchGap,S.hatchGap); gl.uniform1f(U.uHatchAngle,S.hatchAngle);
   gl.drawArrays(gl.TRIANGLES,0,3);
 }
 const ramp=document.getElementById('ramp'), card=document.getElementById('card');
 function build(){
   STOPS=currentStops();
   PTS=layout(STOPS,engine());
+  FP=flowParams();
   ramp.innerHTML=STOPS.map(s=>`<div style="background:${s.hex}" title="${s.hex}"></div>`).join('');
   card.style.borderRadius=S.radius+'px';
   render(cv.width,cv.height);
+  syncPresets();
 }
 const wrap=document.getElementById('wrap'), stage=document.getElementById('stage');
 const MAXCSS=2600;              /* ceiling on the backing store, not on the export */
@@ -1299,10 +1643,11 @@ zoomLab.addEventListener('dblclick',()=>{
 /* ══════════════════════════════════════════════════════════════
    EXPORT
    ══════════════════════════════════════════════════════════════ */
-function toast(msg){
+function toast(msg,action){
   const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('on');
-  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),1600);
+  t.innerHTML=msg; t.classList.add('on'); t.classList.toggle('act',!!action);
+  t.onclick=action?()=>{ t.classList.remove('on'); action(); }:null;
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('on'),action?3200:1600);
 }
 document.getElementById('dlPng').addEventListener('click',()=>{
   const w=S.outW, h=S.outH, ow=cv.width, oh=cv.height;
@@ -1310,7 +1655,7 @@ document.getElementById('dlPng').addEventListener('click',()=>{
   cv.toBlob(bl=>{
     const a=document.createElement('a');
     a.href=URL.createObjectURL(bl);
-    a.download=`gradient-${STOPS[0].hex.slice(1).toLowerCase()}-${S.seed}-${w}x${h}.png`;
+    a.download=`${S.style==='soft'?'gradient':S.style}-${STOPS[0].hex.slice(1).toLowerCase()}-${S.seed}-${w}x${h}.png`;
     a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),4000);
     cv.width=ow; cv.height=oh; render(ow,oh);
     toast(`PNG ${w}×${h} saved`);
@@ -1326,16 +1671,110 @@ document.getElementById('copyCss').addEventListener('click',()=>{
   const css=`background-color: ${STOPS[Math.floor(STOPS.length/2)].hex};\nbackground-image:\n${layers.join(',\n')};`;
   navigator.clipboard.writeText(css).then(()=>toast('CSS copied — approximate, no grain'),()=>toast('Copy blocked'));
 });
+/* a live snippet: one div, one canvas, one script. It draws with the same
+   three functions the studio uses, sizes itself to its box, pauses off-screen
+   and holds a still frame for anyone who asks for reduced motion. */
+function embedCode(){
+  const P={...FP}, fallback=`linear-gradient(${S.direction}deg,${[0,1,2,3,4,5,6].map(i=>rgb2hex(P.c.slice(i*3,i*3+3))).join(',')})`;
+  const js=`(function(){
+var box=document.currentScript.parentNode,cv=box.querySelector('canvas');
+var g=cv.getContext('webgl',{antialias:false,alpha:false});
+if(!g){box.style.background=${JSON.stringify(fallback)};return;}
+var P=${JSON.stringify(P)};
+var VS=${JSON.stringify(VS)};
+var FS=${JSON.stringify(FLOW_FS)};
+${flowProgram.toString()}
+${flowQuad.toString()}
+${flowDraw.toString()}
+var F=flowProgram(g,VS,FS);flowQuad(g);
+var t=${ftime.toFixed(3)},clock=0,last=0,raf=0,seen=true,d=1;
+var still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function size(){var r=box.getBoundingClientRect();d=Math.min(window.devicePixelRatio||1,2);
+  cv.width=Math.max(2,Math.round(r.width*d));cv.height=Math.max(2,Math.round(r.height*d));}
+function draw(){flowDraw(g,F,cv.width,cv.height,P,t,1/d,Math.floor(clock*24));}
+function loop(now){raf=0;if(!seen||still||document.hidden)return;var dt=Math.min(.05,(now-last)/1000);last=now;
+  t+=dt*P.speed;clock+=dt;draw();raf=requestAnimationFrame(loop);}
+function go(){if(!raf&&seen&&!still&&!document.hidden){last=performance.now();raf=requestAnimationFrame(loop);}}
+new ResizeObserver(function(){size();draw();}).observe(box);
+new IntersectionObserver(function(e){seen=e[0].isIntersecting;go();}).observe(box);
+document.addEventListener('visibilitychange',go);
+})();`;
+  return `<!-- Gradient Studio · ${S.style==='sky'?'Sky':'Flow'} texture (live WebGL, pauses off-screen) -->
+<div style="position:relative;width:100%;aspect-ratio:${S.outW} / ${S.outH};border-radius:${S.radius}px;overflow:hidden;background:${fallback}">
+<canvas aria-hidden="true" style="position:absolute;inset:0;width:100%;height:100%;display:block"></canvas>
+<script>${js}<\/script>
+</div>`;
+}
+document.getElementById('copyCode').addEventListener('click',()=>{
+  navigator.clipboard.writeText(embedCode()).then(()=>toast('Code copied — paste it into any page'),()=>toast('Copy blocked'));
+});
+
+let vidLen=10, recording=false;
+document.getElementById('lenSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  vidLen=+b.dataset.v;
+  document.querySelectorAll('#lenSeg button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+});
+/* MediaRecorder records in real time, so the clip plays out on a second,
+   hidden canvas at video size while the preview carries on. MP4 where the
+   browser can encode it, WebM otherwise. */
+const dlVideo=document.getElementById('dlVideo');
+dlVideo.addEventListener('click',async()=>{
+  if(recording) return;
+  if(!window.MediaRecorder) return toast('This browser cannot record video');
+  const mime=['video/mp4;codecs=avc1.640028','video/mp4;codecs=avc1','video/mp4',
+    'video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(m=>MediaRecorder.isTypeSupported(m));
+  if(!mime) return toast('This browser cannot record video');
+  const ext=mime.startsWith('video/mp4')?'mp4':'webm';
+  /* long side capped at 1920 and both sides even — what H.264 encoders accept */
+  const k=Math.min(1,1920/Math.max(S.outW,S.outH));
+  const w=Math.max(2,Math.round(S.outW*k/2)*2), h=Math.max(2,Math.round(S.outH*k/2)*2);
+  const ex=document.createElement('canvas'); ex.width=w; ex.height=h;
+  ex.style.cssText='position:fixed;left:-10000px;top:0;width:8px;height:8px;opacity:0;pointer-events:none';
+  document.body.appendChild(ex);
+  const g=ex.getContext('webgl',{antialias:false,alpha:false,preserveDrawingBuffer:true});
+  const F=flowProgram(g,VS,FLOW_FS); flowQuad(g);
+  const rec=new MediaRecorder(ex.captureStream(30),{mimeType:mime,videoBitsPerSecond:24e6});
+  const chunks=[]; rec.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+  const stopped=new Promise(r=>rec.onstop=r);
+  recording=true; dlVideo.disabled=true;
+  let t=ftime, clock=0;
+  const start=performance.now(); let last=start;
+  flowDraw(g,F,w,h,FP,t,S.outH/h,0);
+  rec.start();
+  await new Promise(done=>{
+    const step=now=>{
+      const el=(now-start)/1000, dt=Math.min(0.05,(now-last)/1000); last=now;
+      t+=dt*S.speed; clock+=dt;
+      flowDraw(g,F,w,h,FP,t,S.outH/h,Math.floor(clock*24));
+      dlVideo.textContent=`Recording… ${Math.max(1,Math.ceil(vidLen-el))}s`;
+      if(el>=vidLen+0.25) return done();   /* the recorder takes a beat to start */
+      requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  });
+  rec.stop(); await stopped;
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(chunks,{type:mime}));
+  a.download=`${S.style}-${STOPS[0].hex.slice(1).toLowerCase()}-${S.seed}-${w}x${h}-${vidLen}s.${ext}`;
+  a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),8000);
+  const lose=g.getExtension('WEBGL_lose_context'); if(lose) lose.loseContext();
+  ex.remove();
+  recording=false; dlVideo.disabled=false; dlVideo.textContent='Download video';
+  toast(`${ext.toUpperCase()} ${w}×${h} saved`);
+});
+
 document.getElementById('copyHex').addEventListener('click',()=>{
   navigator.clipboard.writeText(STOPS.map(s=>s.hex).join('\n')).then(()=>toast('Colours copied'),()=>toast('Copy blocked'));
 });
 addEventListener('keydown',e=>{
   if(e.target.matches('input,[contenteditable]')) return;
   if(e.key==='r'||e.key==='R') document.getElementById('shuffle').click();
+  if(e.key===' '&&S.style!=='soft'&&!e.target.closest('button')){ e.preventDefault(); playing=!playing; syncPlay(); }
 });
 
 /* boot */
-syncMode(); syncGrainSeg(); renderTiles(); paintDial(); renderAspects(); resize();
+syncMode(); syncStyle(); syncGrainSeg(); renderTiles(); paintDial(); renderAspects(); resize();
 </script>
 </body>
 </html>
