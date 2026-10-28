@@ -304,7 +304,88 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
 .presets{margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr)}
 .presets button{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .btn[disabled]{opacity:.6;cursor:default;pointer-events:none}
-#playBtn svg{width:13px;height:13px}
+#playBtn svg,#tlPlay svg{width:13px;height:13px}
+
+/* ── sessions — nothing is written until Save is pressed ── */
+.sessrow{position:relative}
+.sessname{width:100%;height:34px;padding:0 28px 0 12px;border-radius:9px;background:var(--row);
+  box-shadow:inset 0 0 0 .5px var(--row-line);font-size:12px;letter-spacing:-.01em;color:var(--ink-3);
+  transition:color .15s,background .15s}
+.sessname::placeholder{color:var(--ink-3)}
+.sessname:hover{color:var(--ink-2)}
+.sessname:focus{color:var(--ink);background:var(--row-fill)}
+.dirty{position:absolute;right:12px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;
+  background:var(--ink-2);opacity:0;transform:scale(.4);pointer-events:none;
+  transition:opacity .3s cubic-bezier(.16,1,.3,1),transform .3s cubic-bezier(.16,1,.3,1)}
+.dirty.on{opacity:1;transform:scale(1)}
+.sessbtns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.sessbtns.one{grid-template-columns:1fr}
+.sesslist{margin-top:8px;display:flex;flex-direction:column;gap:2px;max-height:176px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+.sess{display:flex;align-items:center;gap:10px;height:34px;flex:none;padding:0 4px 0 8px;border-radius:9px;
+  cursor:pointer;transition:background .15s}
+.sess:hover{background:var(--hover)}
+.sess[aria-current="true"]{background:var(--seg-on)}
+.sess .chip{width:26px;height:16px;border-radius:5px;flex:none;box-shadow:inset 0 0 0 1px rgba(127,127,127,.25)}
+.sess .nm{flex:1;min-width:0;font-size:12px;letter-spacing:-.01em;color:var(--ink-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s}
+.sess:hover .nm,.sess[aria-current="true"] .nm{color:var(--ink)}
+.sess .when{font-family:var(--mono);font-size:9.5px;color:var(--ink-3);flex:none;font-variant-numeric:tabular-nums}
+.sess .x{width:24px;height:24px;border-radius:7px;flex:none;display:grid;place-items:center;font-size:14px;
+  color:var(--ink-3);opacity:0;transition:.14s}
+.sess:hover .x{opacity:1}
+.sess .x:hover{color:var(--ink);background:var(--line)}
+.lenrow{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:var(--ink-2);letter-spacing:-.01em}
+.numin{width:44px;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);text-align:right;
+  padding:3px 5px;border-radius:6px;font-variant-numeric:tabular-nums;transition:color .15s,background .15s}
+.numin:hover{color:var(--ink-2)}
+.numin:focus{color:var(--ink);background:var(--row-fill)}
+.lenrow i{font-style:normal;font-family:var(--mono);font-size:10.5px;color:var(--ink-3)}
+
+/* ── timeline — floats over the foot of the stage ── */
+.tl{position:absolute;left:50%;bottom:16px;z-index:11;width:min(760px,calc(100% - 32px));
+  padding:8px 12px 12px;border-radius:16px;border:1px solid var(--pill-line);background:var(--pill);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 1px 2px rgba(0,0,0,.08),0 12px 36px -12px rgba(0,0,0,.35);
+  transform:translate(-50%,14px);opacity:0;visibility:hidden;
+  transition:transform .45s cubic-bezier(.16,1,.3,1),opacity .3s ease,visibility 0s linear .45s}
+.tl.on{transform:translate(-50%,0);opacity:1;visibility:visible;
+  transition:transform .45s cubic-bezier(.16,1,.3,1),opacity .3s ease,visibility 0s}
+.tl-top{display:flex;align-items:center;gap:6px;min-height:32px;flex-wrap:wrap}
+.tl-top .iconbtn{margin:0}
+.tl-time{font-family:var(--mono);font-size:10.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;
+  display:flex;align-items:center;gap:2px;margin-left:2px}
+.tl-time .numin{width:30px;text-align:right;padding:3px 2px}
+.tl-sp{flex:1}
+.tl .seg{flex:none}
+.tl .seg button{flex:none;padding:0 9px;height:24px}
+.tl-loop{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);cursor:pointer;
+  padding:0 6px;letter-spacing:-.01em;transition:color .15s}
+.tl-loop:hover{color:var(--ink)}
+.tl-loop input{accent-color:var(--ink-2);width:13px;height:13px;cursor:pointer}
+.tl .btn.mono{height:28px}
+.tl-track{position:relative;height:36px;margin-top:8px;border-radius:9px;background:var(--row);
+  box-shadow:inset 0 0 0 .5px var(--row-line);cursor:pointer;touch-action:none;user-select:none}
+.tl-lane{position:absolute;inset:0 12px}
+.tl-ticks i{position:absolute;bottom:0;width:1px;height:6px;background:var(--line-2)}
+.tl-ticks i.maj{height:11px}
+.tl-loopz{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,transparent 0 5px,var(--row-line) 5px 6px);
+  border-radius:0 9px 9px 0;pointer-events:none}
+.tl-key{position:absolute;top:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:2.5px;
+  background:var(--ink-3);transform:rotate(45deg);cursor:grab;
+  transition:background .15s,box-shadow .2s cubic-bezier(.16,1,.3,1),transform .2s cubic-bezier(.16,1,.3,1)}
+.tl-key::before{content:"";position:absolute;inset:-7px}
+.tl-key:hover{background:var(--ink-2);transform:rotate(45deg) scale(1.12)}
+.tl-key.sel{background:var(--ink);box-shadow:0 0 0 3px var(--row-fill-hi)}
+.tl-head{position:absolute;top:-5px;bottom:-5px;width:2px;margin-left:-1px;border-radius:2px;background:var(--ink);pointer-events:none}
+.tl-head::before{content:"";position:absolute;top:-3px;left:50%;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--ink)}
+.tl-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;
+  font-size:11.5px;color:var(--ink-3);letter-spacing:-.01em;padding:0 20px;text-align:center}
+.zoombar{transition:bottom .45s cubic-bezier(.16,1,.3,1)}
+.stage.tl-on .zoombar{bottom:calc(var(--tlh,0px) + 28px)}
+/* while a clip records, the controls rest so nothing can knock the take */
+body.rec .rail,body.rec .tl{pointer-events:none;opacity:.55;transition:opacity .3s}
+@media (hover:none){ .sess .x{opacity:.6} }
 </style>
 </head>
 <body>
@@ -315,11 +396,25 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
       <button class="iconbtn" id="themeBtn" title="Light / dark" aria-label="Toggle theme"></button>
       <div class="headacts">
         <button class="btn mono" id="toggleContent" aria-pressed="false">Content</button>
+        <button class="btn mono" id="toggleTl" aria-pressed="false" title="Timeline — keyframe the settings, then record — T">Animate</button>
         <button class="btn mono" id="reset">Reset</button>
       </div>
     </div>
 
     <div class="rail-body">
+
+      <section class="grp">
+        <div class="grp-h"><span>Sessions</span><span class="seedval" id="sessCount"></span></div>
+        <div class="sessrow">
+          <input class="sessname" id="sessName" placeholder="Untitled" spellcheck="false" maxlength="40" aria-label="Session name">
+          <span class="dirty" id="sessDirty" title="Unsaved changes"></span>
+        </div>
+        <div class="sessbtns" id="sessBtns">
+          <button class="btn mono" id="sessSave">Save</button>
+          <button class="btn mono" id="sessNew">Save as new</button>
+        </div>
+        <div class="sesslist" id="sessList"></div>
+      </section>
 
       <section class="grp">
         <div class="grp-h"><span>Style</span></div>
@@ -400,13 +495,9 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
           <button class="btn mono" id="copyHex">Copy colours</button>
         </div>
         <div class="off" id="videoRow">
-          <div class="seg mono" id="lenSeg" style="margin-top:12px">
-            <button data-v="5"  aria-pressed="false">5s</button>
-            <button data-v="10" aria-pressed="true">10s</button>
-            <button data-v="20" aria-pressed="false">20s</button>
-          </div>
+          <label class="lenrow">Length <input class="numin" id="lenIn" inputmode="decimal" aria-label="Video length in seconds"><i>s</i></label>
           <button class="btn full" id="dlVideo" style="margin-top:6px">Download video</button>
-          <div class="hint">Copy code gives a live, moving version for any website. Video saves the motion as MP4, or WebM where MP4 isn't available.</div>
+          <div class="hint" id="videoHint"></div>
         </div>
       </section>
 
@@ -446,6 +537,38 @@ section.grp{border-bottom:1px solid var(--line);padding:17px 18px 19px}
       <button id="zIn" aria-label="Zoom in" title="Zoom in">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3.5 8h9M8 3.5v9"/></svg>
       </button>
+    </div>
+
+    <div class="tl" id="tl">
+      <div class="tl-top">
+        <button class="iconbtn" id="tlPlay" aria-label="Play"></button>
+        <span class="tl-time"><span id="tlNow">0.00</span>&nbsp;/<input class="numin" id="tlDur" inputmode="decimal" aria-label="Timeline length in seconds">s</span>
+        <span class="tl-sp"></span>
+        <button class="iconbtn off" id="tlCopy" title="Copy keys — ⌘C" aria-label="Copy keys">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="2"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg>
+        </button>
+        <button class="iconbtn off" id="tlPaste" title="Paste keys at the playhead — ⌘V" aria-label="Paste keys">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><rect x="3" y="3" width="10" height="11" rx="2"/><path d="M6 3V2.5h4V3M6 8h4M6 10.5h2.5"/></svg>
+        </button>
+        <button class="iconbtn off" id="tlDel" title="Delete keys — ⌫" aria-label="Delete keys">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.2c.1.8.7 1.3 1.5 1.3h2.8c.8 0 1.4-.5 1.5-1.3l.6-8.2"/></svg>
+        </button>
+        <div class="seg mono" id="tlEase">
+          <button data-v="smooth" aria-pressed="true" title="Ease in and out of each key">Smooth</button>
+          <button data-v="linear" aria-pressed="false" title="Even speed between keys">Linear</button>
+        </div>
+        <label class="tl-loop" title="Ease from the last key back to the first, so the clip loops cleanly"><input type="checkbox" id="tlLoop">Loop</label>
+        <button class="btn mono" id="tlKey" title="Lock the current settings at the playhead — K">◆ Key</button>
+      </div>
+      <div class="tl-track" id="tlTrack">
+        <div class="tl-lane" id="tlLane">
+          <div class="tl-ticks" id="tlTicks"></div>
+          <div class="tl-loopz off" id="tlLoopZ"></div>
+          <div id="tlKeys"></div>
+          <div class="tl-head" id="tlHead"></div>
+        </div>
+        <div class="tl-empty" id="tlEmpty">Press ◆ Key to lock this frame, then move the playhead and change any setting</div>
+      </div>
     </div>
   </main>
 </div>
@@ -908,7 +1031,9 @@ const DEFAULTS={
   scale:1.0, fwarp:1.9, stretch:2.4, detail:3.2, speed:0.3,
   contrast:1.0, sheen:0.3, folds:2.0,
   /* hatch — both styles */
-  hatch:0, hatchGap:7, hatchAngle:45
+  hatch:0, hatchGap:7, hatchAngle:45,
+  /* timeline — keys hold settings at points in time; dur is also the video length */
+  keys:[], dur:10, loop:false, ease:'smooth'
 };
 /* one set of presets per style.
    Soft: candy 3D objects — coins, butterflies, gems, bubbles.
@@ -1264,6 +1389,8 @@ document.getElementById('addColor').addEventListener('click',()=>{
 addEventListener('paste',e=>{
   if(e.target.matches('input,[contenteditable]')) return;
   const t=(e.clipboardData||window.clipboardData).getData('text')||'';
+  const clip=readKeyClip(t);
+  if(clip){ e.preventDefault(); KEYCLIP=clip; pasteKeys(); return; }
   const found=(t.match(/#?\b[0-9a-fA-F]{6}\b/g)||[]).map(hex2rgb).filter(Boolean).map(rgb2hex).slice(0,MAXP-1);
   if(!found.length) return;
   S.colors=found; S.mode=found.length>1?'multi':'single'; openIdx=-1;
@@ -1297,12 +1424,12 @@ function syncStyle(){
   document.querySelectorAll('#styleSeg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===S.style)));
   document.getElementById('styleHint').textContent=STYLE_HINT[S.style];
   renderPresets();
-  ['ctlFlow','motionGrp','copyCode','videoRow'].forEach(id=>document.getElementById(id).classList.toggle('off',!flow));
+  ['ctlFlow','motionGrp','copyCode'].forEach(id=>document.getElementById(id).classList.toggle('off',!flow));
   ['copyCss'].forEach(id=>document.getElementById(id).classList.toggle('off',flow));
   SLIDERS.softness.classList.toggle('off',flow);
   // Depth is shared: sits among the flow sliders (before Folds), or first in Look for soft
   if(flow) SLIDERS.folds.parentNode.insertBefore(SLIDERS.depth,SLIDERS.folds); else SLIDERS.softness.parentNode.insertBefore(SLIDERS.depth,SLIDERS.softness);
-  syncPlay();
+  syncVideoRow(); syncPlay();
 }
 document.getElementById('styleSeg').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b||b.dataset.v===S.style) return;
@@ -1312,7 +1439,7 @@ document.getElementById('styleSeg').addEventListener('click',e=>{
   showSeed();
   syncStyle(); syncGrainSeg(); paintDial();
   Object.values(SLIDERS).forEach(s=>s._paint());
-  build();
+  if(S.keys.length) seek(head); else build();
 });
 const presetRow=document.getElementById('presetRow');
 /* a preset stays lit while the colours are still the ones it set */
@@ -1353,21 +1480,39 @@ const playBtn=document.getElementById('playBtn');
 let playing=!matchMedia('(prefers-reduced-motion: reduce)').matches;
 let ftime=0, gclock=0, raf=0, lastT=0;
 const grainTick=()=>Math.floor(gclock*24);   /* grain re-rolls at film rate, not screen rate */
+/* with the timeline open the playhead is the clock: playing moves it, and
+   everything — settings and the flow's drift — is read off it */
+const moving=()=>tlOpen||S.style!=='soft';
 function frame(now){
   raf=0;
-  if(S.style==='soft'||!playing||document.hidden) return;
+  if(!moving()||!playing||document.hidden||recording) return;
   const dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
-  ftime+=dt*S.speed; gclock+=dt;
-  render(cv.width,cv.height);
+  if(tlOpen){
+    let h=head+dt;
+    if(h>=S.dur){ if(S.loop) h%=S.dur; else { h=S.dur; playing=false; } }
+    seek(h,true);
+    if(!playing){ seek(head); syncPlay(); return; }
+  }else{
+    ftime+=dt*S.speed; gclock+=dt;
+    render(cv.width,cv.height);
+  }
   raf=requestAnimationFrame(frame);
 }
 function syncPlay(){
-  playBtn.innerHTML=playing?ICON_PAUSE:ICON_PLAY;
-  playBtn.title=playing?'Pause — Space':'Play — Space';
-  playBtn.setAttribute('aria-label',playing?'Pause':'Play');
-  if(S.style!=='soft'&&playing&&!document.hidden&&!raf){ lastT=performance.now(); raf=requestAnimationFrame(frame); }
+  [playBtn,tlPlay].forEach(b=>{
+    b.innerHTML=playing?ICON_PAUSE:ICON_PLAY;
+    b.title=playing?'Pause — Space':'Play — Space';
+    b.setAttribute('aria-label',playing?'Pause':'Play');
+  });
+  if(moving()&&playing&&!document.hidden&&!raf&&!recording){ lastT=performance.now(); raf=requestAnimationFrame(frame); }
 }
-playBtn.addEventListener('click',()=>{ playing=!playing; syncPlay(); });
+function togglePlay(){
+  if(!playing&&tlOpen&&head>=S.dur-1e-3&&!S.loop) seek(0,true);
+  const was=playing; playing=!playing;
+  if(was&&tlOpen) seek(head);         /* settle the panel on the frame it stopped at */
+  syncPlay();
+}
+playBtn.addEventListener('click',togglePlay);
 document.addEventListener('visibilitychange',syncPlay);
 
 /* ── grain type ── */
@@ -1475,7 +1620,9 @@ function applyState(next){
   S=structuredClone(next); showSeed(); openIdx=-1;
   syncMode(); syncStyle(); syncGrainSeg(); renderTiles(); paintDial(); paintSize(); renderAspects();
   Object.values(SLIDERS).forEach(s=>s._paint());
+  sel.clear(); head=clamp(head,0,S.dur); renderTrack();
   resize();
+  if(S.keys.length) seek(head);
 }
 /* no confirm: reset happens at once and the toast carries the way back */
 document.getElementById('reset').addEventListener('click',()=>{
@@ -1558,6 +1705,12 @@ function build(){
   card.style.borderRadius=S.radius+'px';
   render(cv.width,cv.height);
   syncPresets();
+  afterEdit();
+}
+/* the cheap half of build, for frames where only the timeline moved */
+function rebuildLight(){
+  STOPS=currentStops(); PTS=layout(STOPS,engine()); FP=flowParams();
+  render(cv.width,cv.height);
 }
 const wrap=document.getElementById('wrap'), stage=document.getElementById('stage');
 const MAXCSS=2600;              /* ceiling on the backing store, not on the export */
@@ -1566,12 +1719,13 @@ let viewW=0;                    /* what the card is actually showing, in CSS px 
    at high zoom would otherwise shrink the fit and oscillate */
 function fitW(){
   const aspect=S.outW/S.outH;
-  const aw=stage.clientWidth-88, ah=stage.clientHeight-88;
+  const aw=stage.clientWidth-88, ah=stage.clientHeight-88-tlReserve();
   let w=Math.min(aw,760,S.outW);
   if(w/aspect>ah) w=ah*aspect;
   return Math.max(w,40);
 }
 function resize(){
+  if(recording) return;            /* the canvas is the video while a take runs */
   const aspect=S.outW/S.outH, f=fitW();
   const cap=Math.min(MAXCSS,MAXCSS*aspect);   /* caps the long side either way */
   const w=clamp(f*S.zoom,40,cap);
@@ -1709,19 +1863,400 @@ document.getElementById('copyCode').addEventListener('click',()=>{
   navigator.clipboard.writeText(embedCode()).then(()=>toast('Code copied — paste it into any page'),()=>toast('Copy blocked'));
 });
 
-let vidLen=10, recording=false;
-document.getElementById('lenSeg').addEventListener('click',e=>{
+/* ══════════════════════════════════════════════════════════════
+   TIMELINE — keys lock the settings at a moment; between them every
+   number eases, colours blend in Oklab and the direction takes the
+   short way round. Choices (seed, grain type, colour count) hold.
+   ══════════════════════════════════════════════════════════════ */
+const TWEEN_NUM=['depth','softness','grain','grainSize','scatter','warp','bloom','vivid','hueShift',
+  'scale','fwarp','stretch','detail','speed','contrast','sheen','folds','hatch','hatchGap','hatchAngle'];
+const TWEEN_HOLD=['seed','grainType','mode','tones'];
+const FPS=30, qt=t=>Math.round(t*FPS)/FPS, DURMAX=60;
+let tlOpen=false, head=0, applying=false, recording=false, KEYCLIP=null;
+const sel=new Set();
+const tl=document.getElementById('tl'), tlPlay=document.getElementById('tlPlay'),
+      tlTrack=document.getElementById('tlTrack'), tlLane=document.getElementById('tlLane'),
+      tlKeys=document.getElementById('tlKeys'), tlHead=document.getElementById('tlHead'),
+      tlNow=document.getElementById('tlNow'), tlDur=document.getElementById('tlDur'),
+      tlLoop=document.getElementById('tlLoop'), tlLoopZ=document.getElementById('tlLoopZ'),
+      tlTicks=document.getElementById('tlTicks'), tlEmpty=document.getElementById('tlEmpty'),
+      toggleTl=document.getElementById('toggleTl'), lenIn=document.getElementById('lenIn');
+const uid=()=>Math.random().toString(36).slice(2,10);
+const keyVals=()=>{
+  const v={direction:S.direction,colors:S.colors.slice()};
+  TWEEN_NUM.forEach(k=>v[k]=S[k]); TWEEN_HOLD.forEach(k=>v[k]=S[k]);
+  return v;
+};
+const easeU=u=>S.ease==='linear'?u:u*u*(3-2*u);
+function mixHex(x,y,u){
+  const A=hex2lch(x),B=hex2lch(y); if(!A||!B) return x;
+  const a=[A.L,A.C*Math.cos(A.H*D),A.C*Math.sin(A.H*D)], b=[B.L,B.C*Math.cos(B.H*D),B.C*Math.sin(B.H*D)];
+  const m=a.map((v,i)=>v+(b[i]-v)*u);
+  return lch2hex(m[0],Math.hypot(m[1],m[2]),Math.atan2(m[2],m[1])/D).hex;
+}
+function mixVals(a,b,u){
+  const v={...a,colors:a.colors.slice()};
+  if(u<=0) return v;
+  TWEEN_NUM.forEach(k=>v[k]=a[k]+(b[k]-a[k])*u);
+  const d=((b.direction-a.direction)%360+540)%360-180;
+  v.direction=((a.direction+d*u)%360+360)%360;
+  if(a.mode===b.mode&&a.colors.length===b.colors.length) v.colors=a.colors.map((h,i)=>mixHex(h,b.colors[i],u));
+  return v;
+}
+/* which two keys a moment sits between, and how far along — loop adds a last
+   leg from the final key back to the first, landing exactly at the end */
+function segAt(t){
+  const K=S.keys, n=K.length;
+  if(!n) return null;
+  if(t<=K[0].t) return {a:K[0].v,b:K[0].v,u:0};
+  for(let i=0;i<n-1;i++) if(t<K[i+1].t) return {a:K[i].v,b:K[i+1].v,u:easeU((t-K[i].t)/(K[i+1].t-K[i].t))};
+  const L=K[n-1];
+  if(S.loop&&n>1&&S.dur-L.t>1e-6) return {a:L.v,b:K[0].v,u:easeU(clamp((t-L.t)/(S.dur-L.t)))};
+  return {a:L.v,b:L.v,u:0};
+}
+function evalAt(t){ const s=segAt(t); return s&&mixVals(s.a,s.b,s.u); }
+/* the flow's drift is speed integrated over time, so a key that changes the
+   speed bends the motion instead of jumping it */
+function flowTimeAt(t){
+  if(!S.keys.length) return S.speed*t;
+  const n=Math.max(1,Math.ceil(t*FPS)), dt=t/n; let s=0;
+  for(let i=0;i<n;i++){ const g=segAt((i+.5)*dt); s+=(g.a.speed+(g.b.speed-g.a.speed)*g.u)*dt; }
+  return s;
+}
+let shownMode=null, shownCount=-1;
+function paintTilesLight(){
+  const n=S.mode==='single'?1:S.colors.length;
+  if(openIdx>=0||S.mode!==shownMode||n!==tileHost.children.length){ syncMode(); renderTiles(); }
+  else [...tileHost.children].forEach((w,i)=>{
+    const t=w.querySelector('.tile'), x=w.querySelector('.hex'), hex=S.colors[i];
+    const fg=(hex2lch(hex)||{L:.6}).L>0.62?'#000':'#fff';
+    t.style.background=hex; t.style.color=fg; x.style.color=fg; t.querySelector('.kill').style.color=fg;
+    if(document.activeElement!==x) x.value=hex;
+  });
+  shownMode=S.mode;
+}
+function syncControls(){
+  Object.values(SLIDERS).forEach(s=>s._paint()); paintDial(); showSeed(); syncGrainSeg(); paintTilesLight();
+}
+/* move the playhead. light = mid-drag or playing: skip the rail's slower work */
+function seek(t,light){
+  head=clamp(t,0,S.dur);
+  applying=true;
+  if(S.keys.length){ const v=evalAt(head); Object.assign(S,v); S.colors=v.colors.slice(); syncControls(); }
+  if(tlOpen){ ftime=flowTimeAt(head); gclock=head; }
+  if(light) rebuildLight(); else build();
+  applying=false;
+  paintHead();
+}
+/* once there is a key, changing any setting writes one at the playhead */
+let editQ=0;
+function afterEdit(){
+  queueDirty();
+  if(applying||recording||editQ) return;
+  editQ=requestAnimationFrame(()=>{ editQ=0; autoKey(); });
+}
+function autoKey(){
+  if(!S.keys.length||applying||recording) return;
+  const cur=keyVals();
+  if(canon(cur)===canon(evalAt(head))) return;
+  if(playing&&tlOpen){ playing=false; syncPlay(); }
+  upsertKey(head,cur);
+}
+function upsertKey(t,v){
+  t=clamp(qt(t),0,S.dur);
+  let k=S.keys.find(k=>Math.abs(k.t-t)<0.5/FPS);
+  if(k) k.v=v; else { k={id:uid(),t,v}; S.keys.push(k); }
+  S.keys.sort((a,b)=>a.t-b.t);
+  renderTrack();
+  return k;
+}
+function lockKey(){
+  if(!tlOpen) setTl(true);
+  const first=!S.keys.length;
+  const k=upsertKey(head,keyVals());
+  sel.clear(); sel.add(k.id); renderTrack();
+  toast(first?'Key locked — move the playhead and change a setting':`Key at ${k.t.toFixed(2)}s`);
+}
+function paintHead(){
+  tlHead.style.left=(head/S.dur*100)+'%';
+  tlNow.textContent=head.toFixed(2);
+}
+function renderTrack(){
+  const d=S.dur, maj=d>20?10:5;
+  let ticks='';
+  for(let s=1;s<d;s++) ticks+=`<i class="${s%maj?'':'maj'}" style="left:${s/d*100}%"></i>`;
+  tlTicks.innerHTML=ticks;
+  tlKeys.innerHTML=S.keys.map(k=>`<b class="tl-key${sel.has(k.id)?' sel':''}" data-id="${k.id}" style="left:${k.t/d*100}%" title="${k.t.toFixed(2)}s"></b>`).join('');
+  const last=S.keys[S.keys.length-1], lz=S.loop&&S.keys.length>1&&last.t<d;
+  tlLoopZ.classList.toggle('off',!lz);
+  if(lz){ tlLoopZ.style.left=(last.t/d*100)+'%'; tlLoopZ.style.width=((d-last.t)/d*100)+'%'; }
+  tlEmpty.classList.toggle('off',S.keys.length>0);
+  [tlDur,lenIn].forEach(x=>{ if(document.activeElement!==x) x.value=+d.toFixed(2); });
+  tlLoop.checked=S.loop;
+  document.querySelectorAll('#tlEase button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.v===S.ease)));
+  document.getElementById('tlCopy').classList.toggle('off',!sel.size);
+  document.getElementById('tlDel').classList.toggle('off',!sel.size);
+  document.getElementById('tlPaste').classList.toggle('off',!KEYCLIP);
+  paintHead(); syncVideoRow(); queueDirty();
+}
+const tlReserve=()=>tlOpen?tl.offsetHeight+16:0;
+function setTl(on){
+  if(on===tlOpen) return;
+  tlOpen=on;
+  tl.classList.toggle('on',on); stage.classList.toggle('tl-on',on);
+  toggleTl.setAttribute('aria-pressed',String(on));
+  stage.style.setProperty('--tlh',tl.offsetHeight+'px');
+  wrap.style.paddingBottom=(44+tlReserve())+'px';
+  if(on){ playing=false; renderTrack(); seek(head); }
+  resize(); syncPlay();
+}
+toggleTl.addEventListener('click',()=>setTl(!tlOpen));
+tlPlay.addEventListener('click',togglePlay);
+document.getElementById('tlKey').addEventListener('click',lockKey);
+tlLoop.addEventListener('change',()=>{ S.loop=tlLoop.checked; renderTrack(); seek(head); });
+document.getElementById('tlEase').addEventListener('click',e=>{
   const b=e.target.closest('button'); if(!b) return;
-  vidLen=+b.dataset.v;
-  document.querySelectorAll('#lenSeg button').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));
+  S.ease=b.dataset.v; renderTrack(); seek(head);
 });
-/* MediaRecorder records in real time, so the clip plays out on a second,
-   hidden canvas at video size while the preview carries on. MP4 where the
-   browser can encode it, WebM otherwise. */
-const dlVideo=document.getElementById('dlVideo');
+/* length can't cut keys off the end — it stops at the last one */
+function setDur(x){
+  const n=parseFloat(String(x.value).replace(',','.'));
+  if(!isNaN(n)){
+    const lastT=S.keys.length?S.keys[S.keys.length-1].t:0;
+    S.dur=Math.round(clamp(n,Math.max(1,lastT),DURMAX)*10)/10;
+  }
+  x.value=S.dur; head=Math.min(head,S.dur); renderTrack(); if(tlOpen) seek(head);
+}
+[tlDur,lenIn].forEach(x=>{
+  x.addEventListener('change',()=>setDur(x));
+  x.addEventListener('keydown',e=>{ if(e.key==='Enter') x.blur(); });
+  x.addEventListener('focus',()=>x.select());
+});
+
+/* track: drag a key to retime it (all selected keys move together), click or
+   drag anywhere else to scrub; the playhead catches on keys it passes near */
+let tdrag=null;
+const laneT=x=>{ const r=tlLane.getBoundingClientRect(); return clamp((x-r.left)/r.width)*S.dur; };
+function snapT(x){
+  const r=tlLane.getBoundingClientRect(), t=laneT(x);
+  for(const k of S.keys) if(Math.abs(k.t-t)/S.dur*r.width<6) return k.t;
+  return qt(t);
+}
+tlTrack.addEventListener('pointerdown',e=>{
+  if(playing){ playing=false; syncPlay(); }
+  try{ tlTrack.setPointerCapture(e.pointerId); }catch(x){}
+  const kEl=e.target.closest('.tl-key');
+  if(kEl){
+    const id=kEl.dataset.id, k=S.keys.find(k=>k.id===id);
+    if(e.shiftKey){ sel.has(id)?sel.delete(id):sel.add(id); }
+    else if(!sel.has(id)){ sel.clear(); sel.add(id); }
+    tdrag={key:k,x0:e.clientX,orig:new Map(S.keys.filter(k=>sel.has(k.id)).map(k=>[k.id,k.t]))};
+    renderTrack(); seek(k.t,true);
+  }else{
+    if(!e.shiftKey) sel.clear();
+    tdrag={scrub:true}; renderTrack(); seek(snapT(e.clientX),true);
+  }
+});
+tlTrack.addEventListener('pointermove',e=>{
+  if(!tdrag) return;
+  if(tdrag.scrub) return seek(snapT(e.clientX),true);
+  const r=tlLane.getBoundingClientRect(), dt=(e.clientX-tdrag.x0)/r.width*S.dur;
+  S.keys.forEach(k=>{ if(tdrag.orig.has(k.id)) k.t=clamp(qt(tdrag.orig.get(k.id)+dt),0,S.dur); });
+  S.keys.sort((a,b)=>a.t-b.t);
+  renderTrack(); seek(tdrag.key.t,true);
+});
+const endT=e=>{
+  if(!tdrag) return;
+  tdrag=null; try{ tlTrack.releasePointerCapture(e.pointerId); }catch(x){}
+  renderTrack(); seek(head);
+};
+tlTrack.addEventListener('pointerup',endT);
+tlTrack.addEventListener('pointercancel',endT);
+
+/* copy / paste — a copied run keeps its spacing, so a whole tween can be
+   lifted and dropped somewhere else. It also goes to the clipboard as text,
+   which is how keys travel between sessions and tabs. */
+function copyKeys(){
+  const ks=S.keys.filter(k=>sel.has(k.id)); if(!ks.length) return;
+  const t0=ks[0].t;
+  KEYCLIP=ks.map(k=>({dt:k.t-t0,v:structuredClone(k.v)}));
+  try{ navigator.clipboard.writeText(JSON.stringify({gsKeys:KEYCLIP})).catch(()=>{}); }catch(x){}
+  renderTrack();
+  toast(ks.length>1?`${ks.length} keys copied`:'Key copied');
+}
+function readKeyClip(t){
+  if(!t||t.indexOf('gsKeys')<0) return null;
+  try{ const o=JSON.parse(t); return Array.isArray(o.gsKeys)&&o.gsKeys.length?o.gsKeys:null; }catch(x){ return null; }
+}
+function pasteKeys(){
+  if(!KEYCLIP) return;
+  if(!tlOpen) setTl(true);
+  const span=KEYCLIP[KEYCLIP.length-1].dt;
+  if(head+span>S.dur) S.dur=Math.min(DURMAX,Math.ceil((head+span)*10)/10);
+  sel.clear();
+  KEYCLIP.forEach(c=>{ const k=upsertKey(head+c.dt,{...keyVals(),...structuredClone(c.v)}); sel.add(k.id); });
+  renderTrack(); seek(head);
+  toast(KEYCLIP.length>1?`${KEYCLIP.length} keys pasted`:'Key pasted');
+}
+function deleteKeys(){
+  if(!sel.size) return;
+  const before=structuredClone(S.keys), n=sel.size;
+  S.keys=S.keys.filter(k=>!sel.has(k.id)); sel.clear();
+  renderTrack(); seek(head);
+  toast(`${n>1?n+' keys':'Key'} deleted · <u>Undo</u>`,()=>{ S.keys=before; renderTrack(); seek(head); });
+}
+document.getElementById('tlCopy').addEventListener('click',copyKeys);
+document.getElementById('tlPaste').addEventListener('click',pasteKeys);
+document.getElementById('tlDel').addEventListener('click',deleteKeys);
+addEventListener('keydown',e=>{
+  if(!tlOpen||e.target.matches('input,[contenteditable]')) return;
+  const mod=e.metaKey||e.ctrlKey;
+  if(mod&&(e.key==='c'||e.key==='C')&&sel.size&&!String(getSelection())){ e.preventDefault(); copyKeys(); }
+  else if(!mod&&(e.key==='Backspace'||e.key==='Delete')&&sel.size){ e.preventDefault(); deleteKeys(); }
+  else if(!mod&&(e.key==='k'||e.key==='K')) lockKey();
+  else if(!mod&&(e.key==='ArrowLeft'||e.key==='ArrowRight')&&!e.target.closest('.ctl,.dial')){
+    e.preventDefault();
+    if(playing){ playing=false; syncPlay(); }
+    seek(qt(head)+(e.key==='ArrowLeft'?-1:1)*(e.shiftKey?1:1/FPS));
+  }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   SESSIONS — saved by hand only. A loaded session shows a dot once it
+   differs from what was saved; Save overwrites it, Save as new forks it.
+   ══════════════════════════════════════════════════════════════ */
+const SKEY='gs-sessions';
+const sessName=document.getElementById('sessName'), sessDirty=document.getElementById('sessDirty'),
+      sessSave=document.getElementById('sessSave'), sessNew=document.getElementById('sessNew'),
+      sessList=document.getElementById('sessList'), sessBtns=document.getElementById('sessBtns');
+let SESS=[], curId=null, curJSON=null;
+try{ SESS=JSON.parse(localStorage.getItem(SKEY))||[]; }catch(e){ SESS=[]; }
+function persist(){
+  try{ localStorage.setItem(SKEY,JSON.stringify(SESS)); return true; }
+  catch(e){ toast('Could not save — browser storage is full or blocked'); return false; }
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* key order never decides whether something changed */
+const canon=o=>JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)
+  ?Object.fromEntries(Object.keys(v).sort().map(x=>[x,v[x]])):v);
+/* what a session holds. Zoom is a view, not the work. With keys, the live
+   values are just wherever the playhead is, so the keys stand for them. */
+function sessionData(){
+  const o=structuredClone(S); delete o.zoom;
+  if(o.keys.length){ ['direction','colors',...TWEEN_NUM,...TWEEN_HOLD].forEach(k=>delete o[k]); }
+  return o;
+}
+const curSess=()=>SESS.find(s=>s.id===curId)||null;
+const STYLE_NAME={soft:'Soft',flow:'Flow',sky:'Sky'};
+function freshName(base){
+  const names=new Set(SESS.map(s=>s.name));
+  if(!names.has(base)) return base;
+  const stem=base.replace(/\s+\d+$/,''); let n=2;
+  while(names.has(`${stem} ${n}`)) n++;
+  return `${stem} ${n}`;
+}
+function ago(ts){
+  const s=(Date.now()-ts)/1000;
+  if(s<60) return 'now'; if(s<3600) return Math.floor(s/60)+'m'; if(s<86400) return Math.floor(s/3600)+'h';
+  return new Date(ts).toLocaleDateString(undefined,{month:'short',day:'numeric'});
+}
+function sessColors(d){
+  const c=(d.keys&&d.keys.length?d.keys[0].v:d).colors||['#888'];
+  const list=(d.keys&&d.keys.length?d.keys[0].v.mode:d.mode)==='single'?c.slice(0,1):c;
+  return list.length>1?list.join(','):`${list[0]},${list[0]}`;
+}
+function renderSessions(){
+  document.getElementById('sessCount').textContent=SESS.length||'';
+  sessList.innerHTML=SESS.map(s=>`<div class="sess" data-id="${s.id}" aria-current="${s.id===curId}" title="Load ${esc(s.name)}">
+    <span class="chip" style="background:linear-gradient(90deg,${sessColors(s.data)})"></span>
+    <span class="nm">${esc(s.name)}</span>
+    <span class="when">${s.data.keys&&s.data.keys.length?'◆ ':''}${ago(s.at)}</span>
+    <button class="x" title="Delete" aria-label="Delete ${esc(s.name)}">×</button></div>`).join('');
+  sessList.classList.toggle('off',!SESS.length);
+  syncDirty();
+}
+let dirtyQ=0;
+function queueDirty(){ if(!dirtyQ) dirtyQ=requestAnimationFrame(()=>{ dirtyQ=0; syncDirty(); }); }
+function syncDirty(){
+  const s=curSess();
+  const d=!!s&&(canon(sessionData())!==curJSON||sessName.value.trim()!==s.name);
+  sessDirty.classList.toggle('on',d);
+  sessSave.disabled=!!s&&!d;
+  sessSave.textContent=s?'Save':'Save session';
+  sessNew.classList.toggle('off',!s); sessBtns.classList.toggle('one',!s);
+}
+function saveNew(){
+  const s=curSess();
+  let nm=sessName.value.trim()||`${STYLE_NAME[S.style]} 1`;
+  if(s&&nm===s.name) nm=freshName(nm+' 2'); else nm=freshName(nm);
+  const data=sessionData(), n={id:uid(),name:nm,at:Date.now(),data};
+  SESS.unshift(n);
+  if(!persist()){ SESS.shift(); return; }
+  curId=n.id; curJSON=canon(data); sessName.value=nm;
+  renderSessions(); toast(`Saved “${esc(nm)}”`);
+}
+function saveCur(){
+  const s=curSess(); if(!s) return saveNew();
+  const prev={name:s.name,at:s.data,ts:s.at};
+  s.name=sessName.value.trim()||s.name; s.data=sessionData(); s.at=Date.now();
+  if(!persist()){ s.name=prev.name; s.data=prev.at; s.at=prev.ts; return; }
+  curJSON=canon(s.data); sessName.value=s.name;
+  renderSessions(); toast(`Saved “${esc(s.name)}”`);
+}
+sessSave.addEventListener('click',saveCur);
+sessNew.addEventListener('click',saveNew);
+sessName.addEventListener('input',queueDirty);
+sessName.addEventListener('keydown',e=>{ if(e.key==='Enter'){ sessName.blur(); saveCur(); } });
+/* loading is instant; whatever was on screen comes back with Undo */
+function loadSession(id){
+  const s=SESS.find(x=>x.id===id); if(!s||recording) return;
+  const back={S:structuredClone(S),curId,curJSON,name:sessName.value,head};
+  const next={...structuredClone(DEFAULTS),...structuredClone(s.data),zoom:S.zoom};
+  if(playing&&tlOpen){ playing=false; syncPlay(); }
+  curId=id; curJSON=canon(s.data); sessName.value=s.name; head=0;
+  applyState(next);
+  if(next.keys.length) setTl(true);
+  renderSessions();
+  toast(`Loaded “${esc(s.name)}” · <u>Undo</u>`,()=>{
+    curId=back.curId; curJSON=back.curJSON; sessName.value=back.name; head=back.head;
+    applyState(back.S); renderSessions();
+  });
+}
+sessList.addEventListener('click',e=>{
+  const row=e.target.closest('.sess'); if(!row) return;
+  const id=row.dataset.id;
+  if(e.target.closest('.x')){
+    const i=SESS.findIndex(s=>s.id===id), gone=SESS[i], wasCur=curId===id;
+    SESS.splice(i,1); persist();
+    if(wasCur){ curId=null; curJSON=null; }
+    renderSessions();
+    toast(`Deleted “${esc(gone.name)}” · <u>Undo</u>`,()=>{
+      SESS.splice(i,0,gone); persist();
+      if(wasCur){ curId=id; curJSON=canon(gone.data); }
+      renderSessions();
+    });
+    return;
+  }
+  if(id===curId) return;
+  loadSession(id);
+});
+
+/* ══════════════════════════════════════════════════════════════
+   VIDEO — MediaRecorder is real time, so the take plays out on the card
+   itself at video size. With a timeline it runs 0 → length exactly as the
+   playhead would; without one it carries on from the live drift.
+   ══════════════════════════════════════════════════════════════ */
+const dlVideo=document.getElementById('dlVideo'), videoHint=document.getElementById('videoHint');
+function syncVideoRow(){
+  const on=S.style!=='soft'||S.keys.length>0;
+  document.getElementById('videoRow').classList.toggle('off',!on);
+  videoHint.textContent=S.keys.length
+    ? `Records the timeline — ${S.keys.length} key${S.keys.length>1?'s':''}${S.loop?', looped':''}. MP4, or WebM where MP4 isn't available.`
+    : 'Copy code gives a live, moving version for any website. Video saves the motion as MP4, or WebM where MP4 isn\'t available. Open Animate to keyframe it.';
+}
 dlVideo.addEventListener('click',async()=>{
   if(recording) return;
-  if(!window.MediaRecorder) return toast('This browser cannot record video');
+  if(!window.MediaRecorder||!cv.captureStream) return toast('This browser cannot record video');
   const mime=['video/mp4;codecs=avc1.640028','video/mp4;codecs=avc1','video/mp4',
     'video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(m=>MediaRecorder.isTypeSupported(m));
   if(!mime) return toast('This browser cannot record video');
@@ -1729,38 +2264,49 @@ dlVideo.addEventListener('click',async()=>{
   /* long side capped at 1920 and both sides even — what H.264 encoders accept */
   const k=Math.min(1,1920/Math.max(S.outW,S.outH));
   const w=Math.max(2,Math.round(S.outW*k/2)*2), h=Math.max(2,Math.round(S.outH*k/2)*2);
-  const ex=document.createElement('canvas'); ex.width=w; ex.height=h;
-  ex.style.cssText='position:fixed;left:-10000px;top:0;width:8px;height:8px;opacity:0;pointer-events:none';
-  document.body.appendChild(ex);
-  const g=ex.getContext('webgl',{antialias:false,alpha:false,preserveDrawingBuffer:true});
-  const F=flowProgram(g,VS,FLOW_FS); flowQuad(g);
-  const rec=new MediaRecorder(ex.captureStream(30),{mimeType:mime,videoBitsPerSecond:24e6});
+  const timed=tlOpen||S.keys.length>0, dur=S.dur, ft0=timed?0:ftime, head0=head, was=playing;
+  const ow=cv.width, oh=cv.height;
+  playing=false; cancelAnimationFrame(raf); raf=0;
+  recording=true; document.body.classList.add('rec'); dlVideo.disabled=true;
+  cv.width=w; cv.height=h;
+  const at=t=>{
+    applying=true;
+    if(S.keys.length){ const v=evalAt(t); Object.assign(S,v); S.colors=v.colors.slice(); syncControls(); }
+    ftime=ft0+flowTimeAt(t); gclock=t;
+    rebuildLight();
+    applying=false;
+    if(tlOpen){ head=t; paintHead(); }
+    /* hand each drawn frame to the encoder ourselves, rather than leaving it
+       to sample whatever the compositor happened to show */
+    if(track&&track.requestFrame) track.requestFrame();
+  };
+  const stream=cv.captureStream(0), track=stream.getVideoTracks()[0];
+  at(0);
+  const rec=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:24e6});
   const chunks=[]; rec.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
-  const stopped=new Promise(r=>rec.onstop=r);
-  recording=true; dlVideo.disabled=true;
-  let t=ftime, clock=0;
-  const start=performance.now(); let last=start;
-  flowDraw(g,F,w,h,FP,t,S.outH/h,0);
-  rec.start();
+  const stopped=new Promise(r=>rec.onstop=r), started=new Promise(r=>rec.onstart=r);
+  rec.start(); await Promise.race([started,new Promise(r=>setTimeout(r,400))]);
   await new Promise(done=>{
+    const start=performance.now();
     const step=now=>{
-      const el=(now-start)/1000, dt=Math.min(0.05,(now-last)/1000); last=now;
-      t+=dt*S.speed; clock+=dt;
-      flowDraw(g,F,w,h,FP,t,S.outH/h,Math.floor(clock*24));
-      dlVideo.textContent=`Recording… ${Math.max(1,Math.ceil(vidLen-el))}s`;
-      if(el>=vidLen+0.25) return done();   /* the recorder takes a beat to start */
+      const el=(now-start)/1000;
+      at(Math.min(el,dur));
+      dlVideo.textContent=`Recording… ${Math.max(1,Math.ceil(dur-el))}s`;
+      if(el>=dur+2/FPS) return done();
       requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
   });
   rec.stop(); await stopped;
+  stream.getTracks().forEach(t=>t.stop());
   const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob(chunks,{type:mime}));
-  a.download=`${S.style}-${STOPS[0].hex.slice(1).toLowerCase()}-${S.seed}-${w}x${h}-${vidLen}s.${ext}`;
+  a.download=`${S.style}-${STOPS[0].hex.slice(1).toLowerCase()}-${S.seed}-${w}x${h}-${+dur.toFixed(1)}s.${ext}`;
   a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),8000);
-  const lose=g.getExtension('WEBGL_lose_context'); if(lose) lose.loseContext();
-  ex.remove();
-  recording=false; dlVideo.disabled=false; dlVideo.textContent='Download video';
+  cv.width=ow; cv.height=oh;
+  recording=false; document.body.classList.remove('rec'); dlVideo.disabled=false; dlVideo.textContent='Download video';
+  if(tlOpen) seek(head0); else build();
+  playing=was; syncPlay();
   toast(`${ext.toUpperCase()} ${w}×${h} saved`);
 });
 
@@ -1769,12 +2315,14 @@ document.getElementById('copyHex').addEventListener('click',()=>{
 });
 addEventListener('keydown',e=>{
   if(e.target.matches('input,[contenteditable]')) return;
+  if(e.metaKey||e.ctrlKey||e.altKey) return;
   if(e.key==='r'||e.key==='R') document.getElementById('shuffle').click();
-  if(e.key===' '&&S.style!=='soft'&&!e.target.closest('button')){ e.preventDefault(); playing=!playing; syncPlay(); }
+  if(e.key==='t'||e.key==='T') setTl(!tlOpen);
+  if(e.key===' '&&moving()&&!e.target.closest('button')){ e.preventDefault(); togglePlay(); }
 });
 
 /* boot */
-syncMode(); syncStyle(); syncGrainSeg(); renderTiles(); paintDial(); renderAspects(); resize();
+syncMode(); syncStyle(); syncGrainSeg(); renderTiles(); paintDial(); renderAspects(); renderTrack(); renderSessions(); resize();
 </script>
 </body>
 </html>
