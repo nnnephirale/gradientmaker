@@ -1,0 +1,44 @@
+/* ── timeline — floats over the foot of the stage ── */
+.tl{position:absolute;left:50%;bottom:16px;z-index:11;width:min(760px,calc(100% - 32px));
+  padding:8px 12px 12px;border-radius:16px;border:1px solid var(--pill-line);background:var(--pill);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 1px 2px rgba(0,0,0,.08),0 12px 36px -12px rgba(0,0,0,.35);
+  transform:translate(-50%,14px);opacity:0;visibility:hidden;
+  transition:transform .45s cubic-bezier(.16,1,.3,1),opacity .3s ease,visibility 0s linear .45s}
+.tl.on{transform:translate(-50%,0);opacity:1;visibility:visible;
+  transition:transform .45s cubic-bezier(.16,1,.3,1),opacity .3s ease,visibility 0s}
+.tl-top{display:flex;align-items:center;gap:6px;min-height:32px;flex-wrap:wrap}
+.tl-top .iconbtn{margin:0}
+.tl-time{font-family:var(--mono);font-size:10.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;
+  display:flex;align-items:center;gap:2px;margin-left:2px}
+.tl-time .numin{width:30px;text-align:right;padding:3px 2px}
+.tl-sp{flex:1}
+.tl .seg{flex:none}
+.tl .seg button{flex:none;padding:0 9px;height:24px}
+.tl-loop{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);cursor:pointer;
+  padding:0 6px;letter-spacing:-.01em;transition:color .15s}
+.tl-loop:hover{color:var(--ink)}
+.tl-loop input{accent-color:var(--ink-2);width:13px;height:13px;cursor:pointer}
+.tl .btn.mono{height:28px}
+.tl-track{position:relative;height:36px;margin-top:8px;border-radius:9px;background:var(--row);
+  box-shadow:inset 0 0 0 .5px var(--row-line);cursor:pointer;touch-action:none;user-select:none}
+.tl-lane{position:absolute;inset:0 12px}
+.tl-ticks i{position:absolute;bottom:0;width:1px;height:6px;background:var(--line-2)}
+.tl-ticks i.maj{height:11px}
+.tl-loopz{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,transparent 0 5px,var(--row-line) 5px 6px);
+  border-radius:0 9px 9px 0;pointer-events:none}
+.tl-key{position:absolute;top:50%;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:2.5px;
+  background:var(--ink-3);transform:rotate(45deg);cursor:grab;
+  transition:background .15s,box-shadow .2s cubic-bezier(.16,1,.3,1),transform .2s cubic-bezier(.16,1,.3,1)}
+.tl-key::before{content:"";position:absolute;inset:-7px}
+.tl-key:hover{background:var(--ink-2);transform:rotate(45deg) scale(1.12)}
+.tl-key.sel{background:var(--ink);box-shadow:0 0 0 3px var(--row-fill-hi)}
+.tl-head{position:absolute;top:-5px;bottom:-5px;width:2px;margin-left:-1px;border-radius:2px;background:var(--ink);pointer-events:none}
+.tl-head::before{content:"";position:absolute;top:-3px;left:50%;width:8px;height:8px;margin-left:-4px;border-radius:50%;background:var(--ink)}
+.tl-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;
+  font-size:11.5px;color:var(--ink-3);letter-spacing:-.01em;padding:0 20px;text-align:center}
+.zoombar{transition:bottom .45s cubic-bezier(.16,1,.3,1)}
+.stage.tl-on .zoombar{bottom:calc(var(--tlh,0px) + 28px)}
+/* while a clip records, the controls rest so nothing can knock the take */
+body.rec .rail,body.rec .tl{pointer-events:none;opacity:.55;transition:opacity .3s}
+@media (hover:none){ .sess .x{opacity:.6} }

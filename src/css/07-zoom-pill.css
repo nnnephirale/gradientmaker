@@ -1,0 +1,48 @@
+/* ── zoom pill ── */
+.zoombar{
+  position:absolute;right:16px;bottom:16px;z-index:10;
+  display:flex;align-items:center;gap:3px;height:38px;padding:0 5px;
+  border-radius:12px;border:1px solid var(--pill-line);background:var(--pill);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:0 4px 16px -4px rgba(0,0,0,.28);
+}
+.zoombar button{
+  width:28px;height:28px;border-radius:8px;display:grid;place-items:center;
+  color:var(--ink-3);transition:.14s;
+}
+.zoombar button:hover{color:var(--ink);background:var(--hover)}
+.zoombar button svg{width:14px;height:14px}
+.zrange{
+  -webkit-appearance:none;appearance:none;width:62px;height:4px;margin:0 3px;
+  border-radius:999px;background:var(--track);cursor:pointer;
+}
+.zrange::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
+  width:9px;height:9px;border-radius:50%;background:var(--track-fill-hi);border:none;cursor:grab}
+.zrange:hover::-webkit-slider-thumb{background:var(--ink-2)}
+.zrange::-moz-range-thumb{width:9px;height:9px;border-radius:50%;
+  background:var(--track-fill-hi);border:none;cursor:grab}
+.zrange:hover::-moz-range-thumb{background:var(--ink-2)}
+.zoombar .sizelab{min-width:46px;text-align:center}
+
+.overlay{position:absolute;inset:0;padding:7.4%;display:flex;flex-direction:column;color:#000}
+.ov-eyebrow{font-size:clamp(9px,1.5cqw,15px);letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.ov-head{font-size:clamp(18px,4.3cqw,44px);line-height:1.09;letter-spacing:-.02em;font-weight:600;margin-top:.7em;max-width:88%}
+.ov-btn{margin-top:1.1em;align-self:flex-start;background:#000;color:#fff;border-radius:999px;padding:.62em 1.15em;font-size:clamp(11px,2.1cqw,21px);font-weight:600}
+.ov-glyph{margin-top:auto;width:16%;aspect-ratio:1}
+.ov-glyph svg{width:100%;height:100%;display:block}
+[contenteditable]{outline:none}
+[contenteditable]:focus{box-shadow:0 0 0 2px rgba(0,0,0,.25);border-radius:3px}
+
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(14px);
+  background:var(--panel);border:1px solid var(--line-2);color:var(--ink);font-family:var(--mono);font-size:10.5px;
+  letter-spacing:.06em;text-transform:uppercase;padding:9px 15px;border-radius:9px;opacity:0;
+  pointer-events:none;transition:.22s;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+/* a toast that carries an action (Undo) takes the pointer while it is up */
+.toast.act.on{pointer-events:auto;cursor:pointer}
+.toast u{text-underline-offset:2px}
+.presets{margin-top:10px;display:grid;grid-template-columns:repeat(3,1fr)}
+.presets button{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn[disabled]{opacity:.6;cursor:default;pointer-events:none}
+#playBtn svg,#tlPlay svg{width:13px;height:13px}
+

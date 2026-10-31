@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gradient Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap" rel="stylesheet">
+<style>
+@@ css/01-base.css
+@@ css/02-rail.css
+@@ css/03-segmented.css
+@@ css/04-colour-tiles.css
+@@ css/05-dial.css
+@@ css/06-stage.css
+@@ css/07-zoom-pill.css
+@@ css/08-sessions.css
+@@ css/09-timeline.css
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="rail">
+    <div class="rail-head">
+      <button class="iconbtn" id="themeBtn" title="Light / dark" aria-label="Toggle theme"></button>
+      <div class="headacts">
+        <button class="btn mono" id="toggleContent" aria-pressed="false">Content</button>
+        <button class="btn mono" id="toggleTl" aria-pressed="false" title="Timeline — keyframe the settings, then record — T">Animate</button>
+        <button class="btn mono" id="reset">Reset</button>
+      </div>
+    </div>
+
+    <div class="rail-body">
+
+      <section class="grp">
+        <div class="grp-h"><span>Sessions</span><span class="seedval" id="sessCount"></span></div>
+        <div class="sessrow">
+          <input class="sessname" id="sessName" placeholder="Untitled" spellcheck="false" maxlength="40" aria-label="Session name">
+          <span class="dirty" id="sessDirty" title="Unsaved changes"></span>
+        </div>
+        <div class="sessbtns" id="sessBtns">
+          <button class="btn mono" id="sessSave">Save</button>
+          <button class="btn mono" id="sessNew">Save as new</button>
+        </div>
+        <div class="sesslist" id="sessList"></div>
+      </section>
+
+      <section class="grp">
+        <div class="grp-h"><span>Style</span></div>
+        <div class="seg" id="styleSeg">
+          <button data-v="soft" aria-pressed="true">Soft</button>
+          <button data-v="flow" aria-pressed="false">Flow</button>
+          <button data-v="sky" aria-pressed="false">Sky</button>
+        </div>
+        <div class="seg mono presets" id="presetRow"></div>
+        <div class="hint" id="styleHint"></div>
+      </section>
+
+      <section class="grp">
+        <div class="grp-h"><span>Colour</span></div>
+        <div class="seg" id="modeSeg">
+          <button data-v="single"   aria-pressed="true">One</button>
+          <button data-v="multi"    aria-pressed="false">Two or more</button>
+        </div>
+        <div class="tiles" style="margin-top:12px" id="tileHost"></div>
+        <button class="addbtn off" id="addColor">+ Add colour</button>
+        <div class="ramp off" id="ramp"></div>
+        <div class="hint" id="modeHint"></div>
+      </section>
+
+      <section class="grp">
+        <div class="grp-h">
+          <span>Look</span>
+          <div class="grp-r"><span class="seedval" id="seedVal" title="Seed"></span><button class="iconbtn" id="shuffle"
+            title="Shuffle — randomises the direction angle and the arrangement (seed; scatter, highlight, distortion in Soft). Your colours, depth, softness and grain are left alone. — R"
+            aria-label="Shuffle direction and arrangement">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 4h2.6l5.8 8H14"/><path d="M2 12h2.6l5.8-8H14"/>
+              <path d="M12 2.2 13.8 4 12 5.8"/><path d="M12 10.2 13.8 12 12 13.8"/>
+            </svg>
+          </button></div>
+        </div>
+        <div class="dialrow">
+          <div class="dial" id="dial" tabindex="0" role="slider" aria-label="Direction" aria-valuemin="0" aria-valuemax="359"><div class="ind"></div></div>
+          <div class="dialmeta">
+            <div class="ctl-top" style="margin-bottom:0">
+              <span class="ctl-lab">Direction <em>aims the light</em></span>
+              <span class="ctl-val" id="angleVal"></span>
+            </div>
+          </div>
+        </div>
+        <div id="ctlFlow"></div>
+        <div id="ctlLook"></div>
+        <div class="seg mono" id="grainSeg" style="margin-top:9px">
+          <button data-v="0" aria-pressed="true">Fine</button>
+          <button data-v="1" aria-pressed="false">Colour</button>
+          <button data-v="2" aria-pressed="false">Film</button>
+          <button data-v="3" aria-pressed="false">Speckle</button>
+        </div>
+        <div id="ctlGrain"></div>
+        <div id="ctlHatch"></div>
+      </section>
+
+      <section class="grp off" id="motionGrp">
+        <div class="grp-h">
+          <span>Motion</span>
+          <button class="iconbtn" id="playBtn" title="Pause — Space" aria-label="Pause"></button>
+        </div>
+        <div id="ctlMotion"></div>
+      </section>
+
+      <section class="grp">
+        <div class="grp-h"><span>Format</span></div>
+        <div class="seg mono" id="aspectSeg"></div>
+        <div id="ctlFmt"></div>
+      </section>
+
+      <section class="grp" style="border-bottom:none">
+        <div class="grp-h"><span>Export</span></div>
+        <button class="btn full primary" id="dlPng">Download PNG</button>
+        <div class="exportgrid">
+          <button class="btn mono" id="copyCss">Copy CSS</button>
+          <button class="btn mono off" id="copyCode">Copy code</button>
+          <button class="btn mono" id="copyHex">Copy colours</button>
+        </div>
+        <div class="off" id="videoRow">
+          <label class="lenrow">Length <input class="numin" id="lenIn" inputmode="decimal" aria-label="Video length in seconds"><i>s</i></label>
+          <button class="btn full" id="dlVideo" style="margin-top:6px">Download video</button>
+          <div class="hint" id="videoHint"></div>
+        </div>
+      </section>
+
+    </div>
+  </aside>
+
+  <main class="stage" id="stage">
+    <div class="canvaswrap" id="wrap">
+     <div class="canvasinner">
+      <div class="card" id="card">
+        <canvas id="gl"></canvas>
+        <div class="overlay off" id="overlay">
+          <div class="ov-eyebrow" contenteditable>No hidden fees</div>
+          <div class="ov-head" contenteditable>Skip the monthly fees, hidden fees, and minimum balance requirements.</div>
+          <button class="ov-btn" contenteditable>Save on fees</button>
+          <div class="ov-glyph">
+            <svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="9">
+              <ellipse cx="50" cy="50" rx="27" ry="36"/><line x1="16" y1="92" x2="84" y2="8"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+      <div class="sizebar">
+        <span class="sizelab" id="sizeLab" data-tip="Double-click to edit values"></span>
+      </div>
+     </div>
+    </div>
+
+    <!-- the readout leads so its hover tip stays clear of the viewport edge:
+         centred on the trailing item it would be clipped by the window -->
+    <div class="zoombar">
+      <span class="sizelab up" id="zoomLab" data-tip="Click to fit — double-click for 100%"></span>
+      <button id="zOut" aria-label="Zoom out" title="Zoom out">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3.5 8h9"/></svg>
+      </button>
+      <input class="zrange" id="zRange" type="range" min="0" max="1" step="0.001" aria-label="Zoom level">
+      <button id="zIn" aria-label="Zoom in" title="Zoom in">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3.5 8h9M8 3.5v9"/></svg>
+      </button>
+    </div>
+
+    <div class="tl" id="tl">
+      <div class="tl-top">
+        <button class="iconbtn" id="tlPlay" aria-label="Play"></button>
+        <span class="tl-time"><span id="tlNow">0.00</span>&nbsp;/<input class="numin" id="tlDur" inputmode="decimal" aria-label="Timeline length in seconds">s</span>
+        <span class="tl-sp"></span>
+        <button class="iconbtn off" id="tlCopy" title="Copy keys — ⌘C" aria-label="Copy keys">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><rect x="5.5" y="5.5" width="8" height="8" rx="2"/><path d="M10.5 5.5V4a1.5 1.5 0 0 0-1.5-1.5H4A1.5 1.5 0 0 0 2.5 4v5A1.5 1.5 0 0 0 4 10.5h1.5"/></svg>
+        </button>
+        <button class="iconbtn off" id="tlPaste" title="Paste keys at the playhead — ⌘V" aria-label="Paste keys">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" stroke-linecap="round"><rect x="3" y="3" width="10" height="11" rx="2"/><path d="M6 3V2.5h4V3M6 8h4M6 10.5h2.5"/></svg>
+        </button>
+        <button class="iconbtn off" id="tlDel" title="Delete keys — ⌫" aria-label="Delete keys">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.2c.1.8.7 1.3 1.5 1.3h2.8c.8 0 1.4-.5 1.5-1.3l.6-8.2"/></svg>
+        </button>
+        <div class="seg mono" id="tlEase">
+          <button data-v="smooth" aria-pressed="true" title="Ease in and out of each key">Smooth</button>
+          <button data-v="linear" aria-pressed="false" title="Even speed between keys">Linear</button>
+        </div>
+        <label class="tl-loop" title="Ease from the last key back to the first, so the clip loops cleanly"><input type="checkbox" id="tlLoop">Loop</label>
+        <button class="btn mono" id="tlKey" title="Lock the current settings at the playhead — K">◆ Key</button>
+      </div>
+      <div class="tl-track" id="tlTrack">
+        <div class="tl-lane" id="tlLane">
+          <div class="tl-ticks" id="tlTicks"></div>
+          <div class="tl-loopz off" id="tlLoopZ"></div>
+          <div id="tlKeys"></div>
+          <div class="tl-head" id="tlHead"></div>
+        </div>
+        <div class="tl-empty" id="tlEmpty">Press ◆ Key to lock this frame, then move the playhead and change any setting</div>
+      </div>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+@@ js/01-colour-core.js
+@@ js/02-colour-generation.js
+@@ js/03-layout.js
+@@ js/04-soft-shader.js
+@@ js/05-flow-shader.js
+@@ js/06-gl-context.js
+@@ js/07-state-presets.js
+@@ js/08-theme.js
+@@ js/09-sliders.js
+@@ js/10-dial.js
+@@ js/11-colour-tiles.js
+@@ js/12-mode-style-presets.js
+@@ js/13-playback.js
+@@ js/14-grain-type.js
+@@ js/15-format-size.js
+@@ js/16-seed-shuffle-reset.js
+@@ js/17-render.js
+@@ js/18-canvas-view.js
+@@ js/19-export.js
+@@ js/20-timeline-model.js
+@@ js/21-timeline-ui.js
+@@ js/22-sessions.js
+@@ js/23-video.js
+@@ js/24-keys-boot.js
+</script>
+</body>
+</html>

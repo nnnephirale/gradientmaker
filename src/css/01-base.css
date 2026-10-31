@@ -1,0 +1,42 @@
+
+:root{
+  --bg:#060606; --panel:#0C0C0C; --panel-2:#111; --line:#1C1C1C; --line-2:#262626;
+  --ink:#EDEDED; --ink-2:#8A8A8A; --ink-3:#5A5A5A;
+  --hover:#151515; --seg-on:#232323; --sunk:#0E0E0E;
+  --track:#1E1E1E; --track-fill:#4A4A4A; --track-fill-hi:#666;
+  --stage:radial-gradient(60% 60% at 50% 40%,#0A0A0A,#060606);
+  --card-ring:rgba(255,255,255,.05); --card-shadow:0 40px 90px -30px rgba(0,0,0,.9);
+  --dial:radial-gradient(circle at 50% 34%,#191919,#0E0E0E 70%);
+  /* filled control rows — the whole row is the track */
+  --row:rgba(255,255,255,.045); --row-line:rgba(255,255,255,.06);
+  --row-fill:rgba(255,255,255,.085); --row-fill-hi:rgba(255,255,255,.125);
+  --row-tick:rgba(255,255,255,.55); --row-tick-hi:rgba(255,255,255,.78);
+  --dot:rgba(255,255,255,.075);
+  --pill:rgba(16,16,16,.82); --pill-line:rgba(255,255,255,.09);
+  --mono:"Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans:-apple-system, BlinkMacSystemFont, "Inter", "Helvetica Neue", Arial, sans-serif;
+  --rail:340px;
+}
+:root[data-theme="light"]{
+  --bg:#F1F1F1; --panel:#FFF; --panel-2:#F7F7F7; --line:#E8E8E8; --line-2:#DCDCDC;
+  --ink:#0A0A0A; --ink-2:#5E5E5E; --ink-3:#9C9C9C;
+  --hover:#F2F2F2; --seg-on:#ECECEC; --sunk:#F7F7F7;
+  --track:#E4E4E4; --track-fill:#B4B4B4; --track-fill-hi:#8E8E8E;
+  --stage:radial-gradient(60% 60% at 50% 40%,#FBFBFB,#EDEDED);
+  --card-ring:rgba(0,0,0,.09); --card-shadow:0 30px 70px -28px rgba(0,0,0,.26);
+  --dial:radial-gradient(circle at 50% 34%,#FFF,#EFEFEF 70%);
+  --row:rgba(0,0,0,.045); --row-line:rgba(0,0,0,.055);
+  --row-fill:rgba(0,0,0,.07); --row-fill-hi:rgba(0,0,0,.10);
+  --row-tick:rgba(0,0,0,.5); --row-tick-hi:rgba(0,0,0,.72);
+  --dot:rgba(0,0,0,.11);
+  --pill:rgba(255,255,255,.9); --pill-line:rgba(0,0,0,.08);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+input{font:inherit;color:inherit;background:none;border:none;outline:none}
+.off{display:none !important}
+
+.app{display:grid;grid-template-columns:var(--rail) 1fr;height:100vh}
+

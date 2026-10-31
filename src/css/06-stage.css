@@ -1,0 +1,42 @@
+/* ── stage ── */
+.stage{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0}
+/* margin:auto centres the card while it fits and collapses to zero once it
+   doesn't — justify-content:center would strand the overflow out of reach */
+/* dot grid over the stage wash: it gives the card something to sit on, so a
+   pale gradient no longer floats in an empty field */
+.canvaswrap{flex:1;min-height:0;display:flex;overflow:auto;padding:36px 44px 44px;
+  background-image:radial-gradient(circle at 1px 1px,var(--dot) 1.4px,transparent 0),var(--stage);
+  background-size:24px 24px,auto}
+.canvasinner{margin:auto;display:flex;flex-direction:column;align-items:center;gap:16px}
+/* the hand only appears once there is somewhere to drag to */
+.canvaswrap.pannable{cursor:grab}
+.canvaswrap.grabbing{cursor:grabbing;user-select:none}
+.card{position:relative;container-type:inline-size;overflow:hidden;box-shadow:var(--card-shadow),0 0 0 1px var(--card-ring)}
+.card canvas{display:block;width:100%;height:100%}
+
+.sizebar{display:flex;align-items:center;gap:2px;height:22px}
+.sizedot{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);opacity:.5}
+#zoomLab{cursor:pointer}
+.sizelab{
+  position:relative;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--ink-3);
+  font-variant-numeric:tabular-nums;cursor:text;padding:3px 8px;border-radius:6px;user-select:none;
+  transition:color .15s,background .15s;
+}
+.sizelab:hover{color:var(--ink-2);background:var(--hover)}
+.sizelab::after{
+  content:attr(data-tip);position:absolute;left:50%;top:calc(100% + 7px);
+  transform:translateX(-50%) translateY(-4px);
+  background:var(--panel);border:1px solid var(--line-2);color:var(--ink-2);
+  font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;
+  padding:5px 9px;border-radius:7px;box-shadow:0 6px 18px rgba(0,0,0,.25);
+  opacity:0;pointer-events:none;transition:.16s;
+}
+.sizelab:hover::after{opacity:1;transform:translateX(-50%) translateY(0)}
+.sizeinput{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--ink);text-align:center;
+  background:var(--panel);border:1px solid var(--line-2);border-radius:6px;padding:3px 8px;width:150px;
+}
+/* tooltips on the pill open upward — below is off the bottom of the stage */
+.sizelab.up::after{top:auto;bottom:calc(100% + 7px);transform:translateX(-50%) translateY(4px)}
+.sizelab.up:hover::after{transform:translateX(-50%) translateY(0)}
+

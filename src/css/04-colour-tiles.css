@@ -1,0 +1,109 @@
+/* ── colour tile + inline picker ── */
+.tiles{display:flex;flex-direction:column;gap:7px}
+.tilewrap{display:flex;flex-direction:column}
+.tile{
+  position:relative;height:52px;border-radius:11px;display:flex;align-items:center;
+  padding:0 8px 0 14px;gap:6px;cursor:pointer;
+  box-shadow:inset 0 0 0 1px rgba(127,127,127,.28);
+  transition:box-shadow .15s;
+}
+.tile:hover{box-shadow:inset 0 0 0 1px rgba(127,127,127,.55)}
+.tile input.hex{
+  font-family:var(--mono);font-size:13px;letter-spacing:.07em;text-transform:uppercase;
+  width:70px;flex:none;cursor:text;padding:4px 3px;border-radius:5px;
+}
+.tile input.hex:focus{background:rgba(127,127,127,.22)}
+.tile .spacer{flex:1;min-width:0;align-self:stretch}
+/* shared toggle: two bars that read as a chevron closed, a dash open */
+.chev{position:relative;width:20px;height:20px;flex:none;opacity:.55;transition:opacity .15s;pointer-events:none}
+.chev span{
+  display:block;position:absolute;top:9px;left:5px;width:10px;height:2px;
+  background:currentColor;border-radius:2px;
+  transition:transform .35s cubic-bezier(0.16,1,0.3,1), opacity .25s ease;
+}
+.chev span:nth-child(1){transform:translateX(-3px) rotate(45deg)}
+.chev span:nth-child(2){transform:translateX(3px) rotate(-45deg)}
+/* on a saturated chip the marker only needs to be found, not read — it sits
+   further in from the edge and carries less contrast than the one in the rail */
+.tile .chev{opacity:.38;margin-right:6px}
+.tile:hover .chev{opacity:.62}
+.tilewrap.open .chev span:nth-child(1){transform:translateX(-3px) rotate(0deg)}
+.tilewrap.open .chev span:nth-child(2){transform:translateX(3px) rotate(0deg)}
+.tile .kill{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:15px;line-height:1;opacity:0;transition:.14s;background:rgba(0,0,0,.14)}
+.tile:hover .kill{opacity:.55}
+.tile .kill:hover{opacity:1;background:rgba(0,0,0,.3)}
+.tile.solo .kill{display:none}
+
+/* the panel slides down out from under the tile as the row opens */
+.pickwrap{display:grid;grid-template-rows:0fr;transition:grid-template-rows .28s cubic-bezier(.33,1,.68,1),margin-top .28s cubic-bezier(.33,1,.68,1)}
+.tilewrap.open .pickwrap{grid-template-rows:1fr;margin-top:3px}
+.pick{overflow:hidden;min-height:0}
+.pickinner{
+  border:1px solid var(--line);border-radius:11px;background:var(--sunk);padding:10px;
+  display:flex;flex-direction:column;gap:10px;
+  transform:translateY(-24px);opacity:0;
+  transition:transform .28s cubic-bezier(.33,1,.68,1),opacity .2s ease;
+}
+.tilewrap.open .pickinner{transform:translateY(0);opacity:1}
+.pad{position:relative;width:100%;height:112px;border-radius:8px;cursor:crosshair;touch-action:none;
+  box-shadow:inset 0 0 0 1px rgba(127,127,127,.2)}
+.pad .dot,.hue .dot{
+  position:absolute;width:13px;height:13px;border-radius:50%;pointer-events:none;
+  border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.45),0 1px 3px rgba(0,0,0,.4);
+  transform:translate(-50%,-50%);
+}
+.hue{position:relative;height:14px;border-radius:999px;cursor:ew-resize;touch-action:none;
+  box-shadow:inset 0 0 0 1px rgba(127,127,127,.25);
+  background:linear-gradient(to right,#F00,#FF0,#0F0,#0FF,#00F,#F0F,#F00)}
+.hue .dot{top:50%}
+.pickfoot{display:flex;gap:6px;align-items:center}
+.fld{
+  flex:1;min-width:0;display:flex;align-items:center;gap:4px;height:30px;padding:0 7px;
+  border:1px solid var(--line-2);border-radius:8px;background:var(--panel);
+  transition:border-color .15s,background .15s;cursor:text;
+}
+.fld:hover{border-color:var(--ink-3)}
+.fld:focus-within{border-color:var(--ink-2);background:var(--panel)}
+.fld b{font-family:var(--mono);font-size:9.5px;font-weight:400;color:var(--ink-3);flex:none}
+.fld input{font-family:var(--mono);font-size:11px;width:100%;min-width:0;text-align:right;font-variant-numeric:tabular-nums}
+.fld i{font-style:normal;font-family:var(--mono);font-size:9.5px;color:var(--ink-3);flex:none}
+.pickfoot .eyedrop{width:30px;height:30px;flex:none;border-radius:8px;border:1px solid var(--line-2);
+  display:grid;place-items:center;color:var(--ink-2);transition:.15s}
+.pickfoot .eyedrop:hover{color:var(--ink);background:var(--hover);border-color:var(--ink-3)}
+.pickfoot .eyedrop svg{width:15px;height:15px}
+
+.addbtn{height:38px;border-radius:10px;border:1px dashed var(--line-2);color:var(--ink-3);font-size:12px;transition:.15s;margin-top:7px;width:100%}
+.addbtn:hover{color:var(--ink);border-color:var(--ink-3);background:var(--hover)}
+.ramp{display:flex;height:20px;border-radius:7px;overflow:hidden;margin-top:9px;border:1px solid var(--line)}
+.ramp div{flex:1}
+
+/* label + value + track collapsed into one row: the whole row is the handle,
+   so the value is scrubbed wherever the pointer happens to land */
+.ctl{position:relative;display:flex;align-items:center;height:34px;margin-top:7px;
+  border-radius:9px;overflow:hidden;background:var(--row);
+  box-shadow:inset 0 0 0 .5px var(--row-line);
+  cursor:grab;user-select:none;touch-action:none;transition:background .15s}
+.ctl:active{cursor:grabbing}
+.ctl:focus-visible{outline:none;box-shadow:inset 0 0 0 1px var(--ink-3)}
+.ctl .fill{position:absolute;left:0;top:0;height:100%;border-radius:9px;
+  background:var(--row-fill);transition:background .15s}
+.ctl:hover .fill{background:var(--row-fill-hi)}
+/* the tick rides the leading edge of the fill but never leaves the row, so a
+   value sitting at either limit still reads as a position rather than absence */
+.ctl .tick{position:absolute;top:50%;width:2px;height:12px;border-radius:2px;
+  background:var(--row-tick);transform:translate(-50%,-50%);transition:background .15s}
+.ctl:hover .tick{background:var(--row-tick-hi)}
+.ctl .lab{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;
+  gap:10px;padding:0 12px;pointer-events:none}
+.ctl-lab{font-size:12px;color:var(--ink-2);letter-spacing:-.01em;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s}
+.ctl:hover .ctl-lab{color:var(--ink)}
+.ctl-lab em{font-style:normal;font-size:10.5px;color:var(--ink-3);margin-left:6px}
+.ctl-val{font-family:var(--mono);font-size:10.5px;color:var(--ink-2);
+  font-variant-numeric:tabular-nums;flex:none;transition:color .15s}
+.ctl:hover .ctl-val{color:var(--ink)}
+
+/* the direction dial keeps a label row above it — same type, no track */
+.ctl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:10px}
+.dialmeta .ctl-lab{font-size:12.5px}
+

@@ -7,3 +7,11 @@
 !gradient-studio-v4.html
 !gradient-studio-v5.html
 !gradient-studio-v6.html
+!CLAUDE.md
+!ARCHITECTURE.md
+!src/
+!src/**
+!scripts/
+!scripts/**
+!tests/
+!tests/**

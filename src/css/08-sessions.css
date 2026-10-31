@@ -1,0 +1,36 @@
+/* ── sessions — nothing is written until Save is pressed ── */
+.sessrow{position:relative}
+.sessname{width:100%;height:34px;padding:0 28px 0 12px;border-radius:9px;background:var(--row);
+  box-shadow:inset 0 0 0 .5px var(--row-line);font-size:12px;letter-spacing:-.01em;color:var(--ink-3);
+  transition:color .15s,background .15s}
+.sessname::placeholder{color:var(--ink-3)}
+.sessname:hover{color:var(--ink-2)}
+.sessname:focus{color:var(--ink);background:var(--row-fill)}
+.dirty{position:absolute;right:12px;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;
+  background:var(--ink-2);opacity:0;transform:scale(.4);pointer-events:none;
+  transition:opacity .3s cubic-bezier(.16,1,.3,1),transform .3s cubic-bezier(.16,1,.3,1)}
+.dirty.on{opacity:1;transform:scale(1)}
+.sessbtns{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.sessbtns.one{grid-template-columns:1fr}
+.sesslist{margin-top:8px;display:flex;flex-direction:column;gap:2px;max-height:176px;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--line-2) transparent}
+.sess{display:flex;align-items:center;gap:10px;height:34px;flex:none;padding:0 4px 0 8px;border-radius:9px;
+  cursor:pointer;transition:background .15s}
+.sess:hover{background:var(--hover)}
+.sess[aria-current="true"]{background:var(--seg-on)}
+.sess .chip{width:26px;height:16px;border-radius:5px;flex:none;box-shadow:inset 0 0 0 1px rgba(127,127,127,.25)}
+.sess .nm{flex:1;min-width:0;font-size:12px;letter-spacing:-.01em;color:var(--ink-2);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s}
+.sess:hover .nm,.sess[aria-current="true"] .nm{color:var(--ink)}
+.sess .when{font-family:var(--mono);font-size:9.5px;color:var(--ink-3);flex:none;font-variant-numeric:tabular-nums}
+.sess .x{width:24px;height:24px;border-radius:7px;flex:none;display:grid;place-items:center;font-size:14px;
+  color:var(--ink-3);opacity:0;transition:.14s}
+.sess:hover .x{opacity:1}
+.sess .x:hover{color:var(--ink);background:var(--line)}
+.lenrow{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:12px;color:var(--ink-2);letter-spacing:-.01em}
+.numin{width:44px;font-family:var(--mono);font-size:10.5px;color:var(--ink-3);text-align:right;
+  padding:3px 5px;border-radius:6px;font-variant-numeric:tabular-nums;transition:color .15s,background .15s}
+.numin:hover{color:var(--ink-2)}
+.numin:focus{color:var(--ink);background:var(--row-fill)}
+.lenrow i{font-style:normal;font-family:var(--mono);font-size:10.5px;color:var(--ink-3)}
+
